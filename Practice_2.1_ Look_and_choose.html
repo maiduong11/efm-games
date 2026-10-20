@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Practice 2.1 – Look and choose</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap">
+<style>
+:root{
+  --bg:#eaf6f1;--card:#fdfaf5;--ink:#23403a;--word:#3b8fe0;--ok:#2fb36b;--frame:#e89c2a;--ring:#e5383b;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#16302b;--card:#1f3d37;--ink:#eaf6f1;}
+}
+:root[data-theme="dark"]{--bg:#16302b;--card:#1f3d37;--ink:#eaf6f1;}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Baloo 2","Trebuchet MS",system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:10px}
+h1{margin:0;font-size:clamp(20px,5vw,30px);font-weight:800;text-align:center}
+#stars{font-size:clamp(18px,4vw,24px);letter-spacing:4px}
+#wrap{container-type:inline-size;width:min(94vw,500px)}
+#prompt{width:100%;border:0;border-radius:5cqw;background:var(--word);color:#fff;font:inherit;display:flex;align-items:center;justify-content:center;gap:4cqw;padding:2cqw 4cqw;margin-bottom:3cqw;cursor:pointer;box-shadow:0 1cqw 0 rgba(0,0,0,.2);transition:background .3s}
+#prompt small{font-size:7cqw;font-weight:600}
+#prompt b{font-size:14cqw;font-weight:800;line-height:1.1}
+#prompt .ans{font-size:7cqw;font-weight:600}
+#prompt.ok{background:var(--ok)}
+#prompt:focus-visible{outline:.8cqw solid var(--ink)}
+#board{display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(3,1fr);gap:1.2cqw;width:100%;aspect-ratio:5/3.3;padding:3cqw;background:var(--card);border:1.6cqw solid var(--frame);border-radius:5cqw}
+.obj{border:0;background:rgba(0,0,0,.04);border-radius:50%;font-size:11cqw;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background .3s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.obj:focus-visible{outline:.7cqw solid var(--ink)}
+.obj.on{box-shadow:0 0 0 .8cqw var(--ring);background:rgba(255,255,255,.7)}
+.obj.done{background:rgba(47,179,107,.35);box-shadow:0 0 0 .6cqw var(--ok)}
+.obj.bad{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-1.4cqw)}50%{transform:translateX(1.4cqw)}75%{transform:translateX(-1cqw)}}
+#win{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
+#win.show{display:flex}
+#win div{background:var(--card);border-radius:28px;padding:28px 34px;text-align:center}
+#win h2{margin:0 0 6px;font-size:clamp(28px,7vw,44px)}
+#win p{margin:0 0 14px;font-size:clamp(34px,9vw,56px)}
+button.again{font:inherit;font-weight:800;font-size:24px;border:0;border-radius:16px;padding:10px 28px;background:var(--ok);color:#fff;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.2)}
+@media (prefers-reduced-motion:reduce){.obj.bad{animation:none}}
+</style>
+</head>
+<body>
+<h1>Look and choose</h1>
+<div id="stars" aria-live="polite">☆☆☆☆☆</div>
+<div id="wrap">
+  <button id="prompt"></button>
+  <div id="board"></div>
+</div>
+<div id="win" role="dialog" aria-live="polite"><div><h2>Well done!</h2><p>⭐⭐⭐</p><button class="again" id="again">Play again</button></div></div>
+
+<script>
+const WORDS=['zero','one','two','three','four','five'];
+const KINDS=['🍎','🐟','🎈','⭐','🐱','🚗','🌸','🦆','🍌','⚽','🐶','🍪'];
+// 15 cells = 1+2+3+4+5. Each kind forms one group in a single row, no filler cells.
+const ROWS=[[5,5,5,5,5],[4,4,4,4,1],[3,3,3,2,2]];
+const board=document.getElementById('board'),stars=document.getElementById('stars'),prompt_=document.getElementById('prompt');
+let target=1,sel=[],lock=false,ac=null;
+
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
+function tone(freqs,dur){
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    freqs.forEach((f,i)=>{
+      const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime+i*dur;
+      o.frequency.value=f;o.type='sine';o.connect(g);g.connect(ac.destination);
+      g.gain.setValueAtTime(.2,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+      o.start(t);o.stop(t+dur);
+    });
+  }catch(e){}
+}
+function say(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=.8;speechSynthesis.speak(u);}catch(e){}}
+
+function startRound(){
+  sel=[];lock=false;board.innerHTML='';
+  prompt_.className='';
+  prompt_.innerHTML='<b>'+WORDS[target]+'</b><span class="ans"></span>';
+  prompt_.setAttribute('aria-label',WORDS[target]);
+  const kind={};shuffle(KINDS).slice(0,5).forEach((k,i)=>kind[i+1]=k);
+  shuffle(ROWS).forEach(row=>{
+    (Math.random()<.5?row:row.slice().reverse()).forEach(s=>{
+      const o=document.createElement('button');
+      o.className='obj';o.dataset.s=s;o.textContent=kind[s];
+      o.setAttribute('aria-label','object');
+      o.onclick=()=>tap(o);
+      board.appendChild(o);
+    });
+  });
+  say(WORDS[target]);
+}
+
+async function tap(o){
+  if(lock)return;
+  if(o.classList.contains('on')){o.classList.remove('on');sel=sel.filter(x=>x!==o);return;}
+  o.classList.add('on');sel.push(o);
+  say(WORDS[sel.length]);
+  if(sel.length<target)return;
+  lock=true;
+  const sizes=new Set(sel.map(x=>x.dataset.s));
+  if(sizes.size===1&&+sel[0].dataset.s===target){
+    await sleep(700);
+    [...board.children].filter(x=>x.dataset.s==target).forEach(x=>{x.classList.remove('on');x.classList.add('done');});
+    prompt_.classList.add('ok');prompt_.querySelector('.ans').textContent=target+' = '+WORDS[target];
+    tone([660,880,1100],.12);
+    stars.textContent='⭐'.repeat(target)+'☆'.repeat(5-target);
+    await sleep(500);say(WORDS[target]);
+    await sleep(1600);
+    if(target===5){tone([523,659,784,1047],.18);document.getElementById('win').classList.add('show');}
+    else{target++;startRound();}
+  }else{
+    await sleep(500);
+    sel.forEach(x=>x.classList.add('bad'));tone([220],.2);
+    await sleep(450);
+    sel.forEach(x=>x.classList.remove('on','bad'));
+    sel=[];lock=false;
+  }
+}
+
+prompt_.onclick=()=>say(WORDS[target]);
+function newGame(){
+  target=1;stars.textContent='☆☆☆☆☆';
+  document.getElementById('win').classList.remove('show');
+  startRound();
+}
+document.getElementById('again').onclick=newGame;
+newGame();
+</script>
+</body>
+</html>

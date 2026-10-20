@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Practice 1 - Count the Stars</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden;font-family:"Comic Sans MS","Baloo 2","Trebuchet MS",sans-serif;user-select:none;touch-action:manipulation}
+  body{background:linear-gradient(#0b1d4d,#1f3b8a);display:flex;flex-direction:column;align-items:center;color:#fff}
+
+  #hud{width:100%;display:flex;justify-content:space-between;align-items:center;padding:10px 18px;z-index:5}
+  #title{background:#ffe066;border-radius:20px;padding:6px 16px;font-weight:bold;color:#7a4a00;font-size:clamp(16px,2.6vw,26px);box-shadow:0 3px 0 #e0a800}
+  #score{font-size:clamp(20px,3vw,30px);background:rgba(255,255,255,.15);border-radius:20px;padding:4px 14px}
+
+  #q{display:flex;align-items:center;gap:12px;font-size:clamp(24px,4.6vw,44px);font-weight:bold;color:#ffe066;text-shadow:0 3px 0 rgba(0,0,0,.3);margin-bottom:6px}
+  #speak{width:48px;height:48px;border-radius:50%;border:none;background:#4dabf7;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 4px 0 #1c7ed6}
+  #speak:active{transform:translateY(3px);box-shadow:0 1px 0 #1c7ed6}
+
+  #sky{position:relative;flex:1;width:min(94vw,820px);min-height:180px;border-radius:26px;overflow:hidden;
+    background:radial-gradient(circle at 85% 15%,#fff7c2 0,#fff7c2 4%,transparent 4.2%),linear-gradient(#102a6b,#2a4aa8);
+    border:4px solid rgba(255,255,255,.25);box-shadow:inset 0 0 40px rgba(0,0,0,.35)}
+  .bg{position:absolute;width:4px;height:4px;border-radius:50%;background:#fff;opacity:.6;animation:tw 2.5s ease-in-out infinite}
+  @keyframes tw{0%,100%{opacity:.2}50%{opacity:.9}}
+
+  .star{position:absolute;width:clamp(60px,11vw,96px);height:clamp(60px,11vw,96px);border:none;background:none;cursor:pointer;padding:0;
+    transform:translate(-50%,-50%);animation:float 3s ease-in-out infinite}
+  .star .shape{position:absolute;inset:0;background:#8fa6d8;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);transition:background .2s}
+  .star .n{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:clamp(22px,4vw,38px);font-weight:bold;color:#7a4a00;padding-top:8%;opacity:0;transform:scale(.3);transition:all .25s}
+  .star.lit{filter:drop-shadow(0 0 14px #ffe066) drop-shadow(0 0 28px #ffd43b);animation:litpop .5s}
+  .star.lit .shape{background:linear-gradient(#fff3a0,#ffc107)}
+  .star.lit .n{opacity:1;transform:scale(1)}
+  @keyframes float{0%,100%{margin-top:0}50%{margin-top:-8px}}
+  @keyframes litpop{0%{transform:translate(-50%,-50%) scale(1)}40%{transform:translate(-50%,-50%) scale(1.35) rotate(15deg)}100%{transform:translate(-50%,-50%) scale(1)}}
+  .star.flash{animation:flash .9s}
+  @keyframes flash{0%,100%{transform:translate(-50%,-50%) scale(1)}25%{transform:translate(-50%,-50%) scale(1.25)}50%{transform:translate(-50%,-50%) scale(1)}75%{transform:translate(-50%,-50%) scale(1.25)}}
+
+  #panel{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:clamp(10px,3vw,30px);padding:12px 10px 16px}
+  #ansWrap{display:flex;align-items:center;gap:10px;font-size:clamp(22px,4vw,36px);font-weight:bold}
+  #box{width:clamp(78px,13vw,110px);height:clamp(70px,11vw,96px);background:#fff;border:5px dashed #ffd43b;border-radius:18px;color:#d6336c;font-size:clamp(44px,8vw,70px);display:flex;align-items:center;justify-content:center}
+  #box.shake{animation:shake .45s}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-12px)}40%{transform:translateX(12px)}60%{transform:translateX(-8px)}80%{transform:translateX(8px)}}
+  #keys{display:flex;gap:clamp(6px,1.6vw,14px)}
+  #keys button{width:clamp(48px,10vw,76px);height:clamp(54px,10vw,76px);border:none;border-radius:16px;background:#74c0fc;color:#0b3d6b;font:inherit;font-size:clamp(26px,5vw,42px);font-weight:bold;cursor:pointer;box-shadow:0 6px 0 #339af0}
+  #keys button:active:not(:disabled){transform:translateY(4px);box-shadow:0 2px 0 #339af0}
+  #keys button:disabled{background:#6b7fb0;color:#b8c4e4;box-shadow:0 6px 0 #4a5d8f;cursor:not-allowed}
+
+  #msg{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%) scale(0);font-size:clamp(36px,8vw,80px);font-weight:bold;color:#fff;text-shadow:0 4px 0 rgba(0,0,0,.4);z-index:40;pointer-events:none;white-space:nowrap}
+  #msg.show{animation:msg 1.1s forwards}
+  @keyframes msg{0%{transform:translate(-50%,-50%) scale(0)}25%{transform:translate(-50%,-50%) scale(1.15)}70%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(-50%,-50%) scale(1);opacity:0}}
+  .conf{position:fixed;font-size:28px;z-index:30;pointer-events:none;animation:fall 1.2s ease-out forwards}
+  @keyframes fall{from{transform:translate(0,0) scale(1);opacity:1}to{transform:translate(var(--dx),var(--dy)) rotate(360deg) scale(.6);opacity:0}}
+
+  #end{position:fixed;inset:0;background:rgba(11,29,77,.95);display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:50;text-align:center}
+  #end h1{font-size:clamp(36px,7vw,72px);color:#ffe066}
+  #end .big{font-size:clamp(40px,8vw,80px)}
+  #start{position:fixed;inset:0;background:linear-gradient(#0b1d4d,#2a4aa8);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:60;text-align:center;padding:20px}
+  #start h1{font-size:clamp(34px,7vw,70px);color:#ffe066;text-shadow:0 3px 0 rgba(0,0,0,.3)}
+  #start p{font-size:clamp(18px,3vw,28px);max-width:700px}
+  .bigbtn{font:inherit;font-size:clamp(26px,5vw,44px);padding:12px 50px;border:none;border-radius:50px;background:#ffd43b;color:#7a4a00;cursor:pointer;box-shadow:0 7px 0 #e0a800}
+  .bigbtn:active{transform:translateY(5px);box-shadow:0 2px 0 #e0a800}
+</style>
+</head>
+<body>
+<div id="hud">
+  <div id="title">⭐ Count the Stars</div>
+  <div id="score">⭐ 0 / 5</div>
+</div>
+
+<div id="q"><span id="qtext">Tap each star and count!</span><button id="speak" title="Listen">🔊</button></div>
+
+<div id="sky"></div>
+
+<div id="panel">
+  <div id="ansWrap"><div id="box"></div><span>stars</span></div>
+  <div id="keys"></div>
+</div>
+
+<div id="msg"></div>
+
+<div id="start">
+  <h1>⭐ Count the Stars ⭐</h1>
+  <p>Tap each star to count it.<br>Then write how many stars there are!</p>
+  <button class="bigbtn" id="startBtn">▶ Play</button>
+</div>
+
+<div id="end">
+  <h1>Super counting! 🎉</h1>
+  <div class="big" id="endStars"></div>
+  <button class="bigbtn" id="again" style="background:#40c057;color:#fff;box-shadow:0 7px 0 #2b8a3e">↻ Play again</button>
+</div>
+
+<script>
+(function(){
+  var CW=["zero","one","two","three","four","five","six","seven","eight","nine","ten"];
+  var sky=document.getElementById("sky"), box=document.getElementById("box"), keys=document.getElementById("keys");
+  var scoreEl=document.getElementById("score"), qtext=document.getElementById("qtext"), msgEl=document.getElementById("msg");
+  var order, idx, score, count, total, locked, triedWrong, audioCtx;
+
+  function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+
+  function tone(freq,dur,type,delay,vol){
+    try{
+      audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+      var o=audioCtx.createOscillator(),g=audioCtx.createGain();
+      o.type=type||"sine";o.frequency.value=freq;
+      var t0=audioCtx.currentTime+(delay||0);
+      g.gain.setValueAtTime(vol||.2,t0);g.gain.exponentialRampToValueAtTime(.001,t0+dur);
+      o.connect(g);g.connect(audioCtx.destination);o.start(t0);o.stop(t0+dur);
+    }catch(e){}
+  }
+  function sfxStar(n){tone(500+n*70,.18,"triangle",0,.25)}
+  function sfxOK(){tone(880,.1,"triangle",0,.25);tone(1175,.15,"triangle",.1,.25);tone(1568,.25,"triangle",.2,.25)}
+  function sfxBad(){tone(220,.25,"sawtooth",0,.12);tone(165,.3,"sawtooth",.15,.12)}
+  function sfxWin(){[523,659,784,1047].forEach(function(f,i){tone(f,.3,"triangle",i*.15,.25)})}
+  function speak(t){try{if(!window.speechSynthesis)return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.lang="en-US";u.rate=.8;u.pitch=1.2;speechSynthesis.speak(u)}catch(e){}}
+
+  function showMsg(text){
+    msgEl.textContent=text;msgEl.classList.remove("show");void msgEl.offsetWidth;msgEl.classList.add("show");
+  }
+  function confetti(){
+    var r=box.getBoundingClientRect(),em=["🎉","⭐","✨","🎊","💛"];
+    for(var i=0;i<14;i++){
+      var c=document.createElement("div");c.className="conf";c.textContent=em[i%em.length];
+      c.style.left=(r.left+r.width/2)+"px";c.style.top=(r.top)+"px";
+      c.style.setProperty("--dx",(Math.random()*300-150)+"px");
+      c.style.setProperty("--dy",(Math.random()*-260)+"px");
+      document.body.appendChild(c);
+      setTimeout(function(el){return function(){el.remove()}}(c),1300);
+    }
+  }
+
+  function buildKeys(){
+    keys.innerHTML="";
+    [6,7,8,9,10].forEach(function(n){
+      var b=document.createElement("button");b.textContent=n;b.disabled=true;
+      b.addEventListener("click",function(){answer(n)});
+      keys.appendChild(b);
+    });
+  }
+  function setKeys(on){Array.prototype.forEach.call(keys.children,function(b){b.disabled=!on})}
+
+  function bgStars(){
+    for(var i=0;i<30;i++){
+      var d=document.createElement("div");d.className="bg";
+      d.style.left=Math.random()*100+"%";d.style.top=Math.random()*100+"%";
+      d.style.animationDelay=(-Math.random()*2.5)+"s";
+      sky.appendChild(d);
+    }
+  }
+
+  function placeStars(n){
+    var W=sky.clientWidth,H=sky.clientHeight;
+    var size=Math.max(60,Math.min(96,W*.11));
+    var pad=size*.75, minD=size*1.15, pts=[], tries=0;
+    while(pts.length<n && tries<5000){
+      tries++;
+      var x=pad+Math.random()*(W-2*pad), y=pad+Math.random()*(H-2*pad);
+      var ok=true;
+      for(var i=0;i<pts.length;i++){var dx=pts[i][0]-x,dy=pts[i][1]-y;if(Math.sqrt(dx*dx+dy*dy)<minD){ok=false;break}}
+      if(ok)pts.push([x,y]);
+      if(tries%1000===0)minD*=.9;
+    }
+    return pts;
+  }
+
+  function newRound(){
+    total=order[idx];count=0;locked=false;triedWrong=false;
+    box.textContent="";
+    qtext.textContent="Tap each star and count!";
+    setKeys(false);
+    sky.innerHTML="";bgStars();
+    placeStars(total).forEach(function(p,i){
+      var s=document.createElement("button");s.className="star";
+      s.style.left=p[0]+"px";s.style.top=p[1]+"px";
+      s.style.animationDelay=(-Math.random()*3)+"s";
+      s.innerHTML='<div class="shape"></div><div class="n"></div>';
+      s.addEventListener("click",function(){tapStar(s)});
+      sky.appendChild(s);
+    });
+  }
+
+  function tapStar(s){
+    if(s.classList.contains("lit")||count>=total)return;
+    count++;
+    s.classList.add("lit");
+    s.querySelector(".n").textContent=count;
+    sfxStar(count);speak(CW[count]);
+    if(count===total){
+      setTimeout(function(){qtext.textContent="How many stars? Write the number!";setKeys(true)},700);
+    }
+  }
+
+  function answer(n){
+    if(locked)return;
+    box.textContent=n;
+    if(n===total){
+      locked=true;setKeys(false);
+      sfxOK();confetti();showMsg("Yes! "+total+" stars ⭐");
+      if(!triedWrong){score++;scoreEl.textContent="⭐ "+score+" / 5"}
+      speak(CW[total]+" stars. Good job!");
+      Array.prototype.forEach.call(sky.querySelectorAll(".star"),function(s){s.classList.add("flash")});
+      idx++;
+      setTimeout(function(){if(idx>=order.length)finish();else newRound()},2000);
+    }else{
+      triedWrong=true;sfxBad();
+      box.classList.remove("shake");void box.offsetWidth;box.classList.add("shake");
+      speak("Count again!");
+      setTimeout(function(){if(!locked)box.textContent=""},700);
+    }
+  }
+
+  function finish(){
+    sfxWin();
+    var s="";for(var i=0;i<5;i++)s+=i<score?"⭐":"☆";
+    document.getElementById("endStars").textContent=s;
+    document.getElementById("end").style.display="flex";
+  }
+
+  function startGame(){
+    order=shuffle([6,7,8,9,10]);idx=0;score=0;
+    scoreEl.textContent="⭐ 0 / 5";
+    document.getElementById("end").style.display="none";
+    newRound();
+  }
+
+  document.getElementById("speak").addEventListener("click",function(){speak("Tap each star and count!")});
+  document.getElementById("startBtn").addEventListener("click",function(){
+    document.getElementById("start").style.display="none";
+    tone(1,.01,"sine",0,.001);
+    buildKeys();startGame();
+  });
+  document.getElementById("again").addEventListener("click",startGame);
+  window.addEventListener("resize",function(){ if(order&&!locked&&count===0)newRound() });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Extension 1.2 – Supermarket</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap">
+<style>
+:root{
+  --bg:#eaf6f1;--card:#ffffff;--ink:#23403a;--ok:#2fb36b;--bad:#e5383b;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#16302b;--card:#1f3d37;--ink:#eaf6f1;}
+}
+:root[data-theme="dark"]{--bg:#16302b;--card:#1f3d37;--ink:#eaf6f1;}
+*{box-sizing:border-box}
+html{height:100%}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:"Baloo 2","Trebuchet MS",system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;padding:10px}
+#app{margin:auto 0;display:flex;flex-direction:column;align-items:center;gap:8px;width:100%}
+h1{margin:0;font-size:clamp(20px,5vw,30px);font-weight:800;text-align:center}
+#stars{font-size:clamp(18px,4vw,24px);letter-spacing:3px}
+#stage{container-type:inline-size;position:relative;width:min(94vw,440px);display:flex;flex-direction:column;gap:3cqw}
+#tip{min-height:8cqw;text-align:center;font-size:6cqw;font-weight:800}
+#list{background:#fff6cf;color:#4a3b1f;border-radius:4cqw;padding:3cqw;box-shadow:0 1cqw 0 rgba(0,0,0,.15);display:flex;flex-direction:column;gap:2cqw}
+.row{display:flex;align-items:center;gap:1.2cqw;border-radius:3cqw;padding:.8cqw 1.5cqw;border:.7cqw solid transparent}
+.row .wd{font-size:8.5cqw;font-weight:800;width:25cqw;flex:none}
+.it{width:10cqw;height:10cqw;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7cqw;line-height:1;padding:0;border:.7cqw solid transparent;background:none}
+.it.have{background:#fff;border-color:rgba(74,59,31,.35)}
+.it.add{background:#d7f5e2;border-color:var(--ok);cursor:pointer;animation:pop .3s}
+@keyframes pop{from{transform:scale(.4)}to{transform:scale(1)}}
+.row .tick{margin-left:auto;font-size:6.5cqw;visibility:hidden}
+.row.ok{background:rgba(47,179,107,.25)}
+.row.ok .tick{visibility:visible}
+.row.bad{border-color:var(--bad);animation:shake .4s}
+.shelf{background:#e9c79a;border-radius:4cqw;padding:1.5cqw 2cqw}
+.plank{display:flex;justify-content:space-around;border-bottom:1.2cqw solid #a8743c;padding:1cqw 0}
+.plank:last-child{border-bottom:0}
+.slot{width:15cqw;height:13cqw;font-size:9cqw;line-height:1;border:0;background:none;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;border-radius:50%;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.slot.empty{cursor:default;background:rgba(0,0,0,.07);width:11cqw;height:11cqw;align-self:center}
+.slot.empty span{display:none}
+.slot.bad{animation:shake .4s}
+.slot.hint{animation:pulse .6s infinite alternate}
+@keyframes pulse{to{transform:scale(1.25);background:rgba(255,255,255,.6)}}
+.slot:focus-visible,.it.add:focus-visible,#done:focus-visible{outline:.8cqw solid var(--ink)}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-1.6cqw)}50%{transform:translateX(1.6cqw)}75%{transform:translateX(-1cqw)}}
+#bar{display:flex;justify-content:center}
+#done{font:inherit;font-weight:800;font-size:6.5cqw;border:0;border-radius:4cqw;padding:1cqw 9cqw;background:var(--ok);color:#fff;cursor:pointer;box-shadow:0 1cqw 0 rgba(0,0,0,.2)}
+#hand{position:absolute;display:none;font-size:10cqw;line-height:1;pointer-events:none;z-index:5;transform:translate(-50%,-15%);transition:left .6s,top .6s}
+#win{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
+#win.show{display:flex}
+#win div{background:var(--card);border-radius:28px;padding:28px 34px;text-align:center}
+#win h2{margin:0 0 6px;font-size:clamp(28px,7vw,44px)}
+#win p{margin:0 0 14px;font-size:clamp(34px,9vw,56px)}
+button.again{font:inherit;font-weight:800;font-size:24px;border:0;border-radius:16px;padding:10px 28px;background:var(--ok);color:#fff;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.2)}
+@media (prefers-reduced-motion:reduce){.slot.bad,.it.add,.row.bad,.slot.hint{animation:none}#hand{transition:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>Supermarket</h1>
+  <div id="stars" aria-live="polite">☆☆☆☆☆</div>
+  <div id="stage">
+    <div id="tip"></div>
+    <div id="list"></div>
+    <div class="shelf" id="shelf"></div>
+    <div id="bar"><button id="done" aria-label="Check">Done ✓</button></div>
+    <div id="hand" aria-hidden="true">👆</div>
+  </div>
+</div>
+<div id="win" role="dialog" aria-live="polite"><div><h2>Well done!</h2><p>⭐⭐⭐</p><button class="again" id="again">Play again</button></div></div>
+
+<script>
+const WORDS=['zero','one','two','three','four','five'];
+// Each line starts with a number word. The basket already holds some items ("have").
+// The child works out how many more to pick from the shelf to reach that number.
+// rows: [item, the number on the line (2-5), already in the basket (at least 1)]. Each shelf also has one item that is not on the list.
+const DEMO={rows:[['🍌',4,2]],extra:'🍎'};
+const ROUNDS=[
+  {rows:[['🍎',3,1],['🥛',2,1]],extra:'🍌'},
+  {rows:[['🍪',4,2],['🥕',3,1]],extra:'🍅'},
+  {rows:[['🍞',5,3],['🍅',4,1],['🥚',2,1]],extra:'🍎'},
+  {rows:[['🍓',5,2],['🍌',4,3],['🧀',3,2]],extra:'🥕'},
+  {rows:[['🥔',5,1],['🍇',4,2],['🥦',5,4]],extra:'🍪'}
+];
+const STOCK=5;
+const $=id=>document.getElementById(id);
+const shelfEl=$('shelf'),listEl=$('list'),stars=$('stars'),tip=$('tip'),hand=$('hand'),stage=$('stage');
+let round=0,rows=[],planks=[],lock=true,ac=null,demoDone=false;
+
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
+function tone(freqs,dur){
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    freqs.forEach((f,i)=>{
+      const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime+i*dur;
+      o.frequency.value=f;o.type='sine';o.connect(g);g.connect(ac.destination);
+      g.gain.setValueAtTime(.2,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+      o.start(t);o.stop(t+dur);
+    });
+  }catch(e){}
+}
+
+function load(def){
+  rows=def.rows.map(([kind,n,have])=>({kind,n,have,added:[]}));
+  const kinds=shuffle([...rows.map(r=>r.kind),def.extra]);
+  planks=kinds.map(k=>({kind:k,slots:Array.from({length:STOCK},()=>({kind:k,taken:false}))}));
+  render();
+}
+
+function render(){
+  listEl.innerHTML='';
+  rows.forEach(r=>{
+    const el=document.createElement('div');el.className='row';
+    el.innerHTML='<span class="wd">'+WORDS[r.n]+'</span>';
+    for(let i=0;i<r.have;i++)el.insertAdjacentHTML('beforeend','<span class="it have">'+r.kind+'</span>');
+    r.added.forEach(s=>{
+      const b=document.createElement('button');
+      b.className='it add';b.textContent=r.kind;b.setAttribute('aria-label','put back');
+      b.onclick=()=>putBack(r,s);
+      el.appendChild(b);
+    });
+    el.insertAdjacentHTML('beforeend','<span class="tick">✓</span>');
+    listEl.appendChild(el);
+  });
+  shelfEl.innerHTML='';
+  planks.forEach(p=>{
+    const d=document.createElement('div');d.className='plank';
+    p.slots.forEach(s=>{
+      const b=document.createElement('button');
+      b.className='slot'+(s.taken?' empty':'');
+      b._s=s;b.innerHTML='<span>'+s.kind+'</span>';
+      if(s.taken)b.tabIndex=-1;else{b.setAttribute('aria-label','pick');b.onclick=()=>take(s,b);}
+      d.appendChild(b);
+    });
+    shelfEl.appendChild(d);
+  });
+}
+
+function place(s,r){s.taken=true;r.added.push(s);tone([520],.08);render();}
+function take(s,btn){
+  if(lock)return;
+  const r=rows.find(x=>x.kind===s.kind);
+  if(!r){                         // that item is not on the list
+    tone([220],.2);btn.classList.add('bad');
+    setTimeout(()=>btn.classList.remove('bad'),420);
+    return;
+  }
+  place(s,r);
+}
+function putBack(r,s){
+  if(lock)return;
+  s.taken=false;r.added=r.added.filter(x=>x!==s);tone([400],.08);render();
+}
+
+async function check(){
+  if(lock)return;lock=true;
+  const els=[...listEl.children];
+  let allOk=true;
+  rows.forEach((r,i)=>{
+    const ok=r.have+r.added.length===r.n;
+    if(!ok)allOk=false;
+    els[i].classList.add(ok?'ok':'bad');
+  });
+  if(allOk){
+    tone([660,880,1100],.12);
+    stars.textContent='⭐'.repeat(round+1)+'☆'.repeat(4-round);
+    await sleep(1700);
+    round++;
+    if(round===ROUNDS.length){tone([523,659,784,1047],.18);$('win').classList.add('show');}
+    else{tip.textContent='';load(ROUNDS[round]);lock=false;}
+  }else{
+    // not quite: the wrong lines shake, the child keeps going (no penalty)
+    tone([220],.2);
+    await sleep(500);
+    els.forEach(e=>e.classList.remove('ok','bad'));
+    lock=false;
+  }
+}
+
+// Tutorial on the first line: watch a hand pick the missing items, then it is the child's turn.
+async function demo(){
+  lock=true;tip.textContent='👀 Watch';
+  load(DEMO);
+  await sleep(1200);
+  const r=rows[0];
+  for(let j=0;j<DEMO.rows[0][1]-DEMO.rows[0][2];j++){
+    const btn=[...shelfEl.querySelectorAll('.slot')].find(b=>b._s&&!b._s.taken&&b._s.kind===r.kind);
+    const st=stage.getBoundingClientRect(),br=btn.getBoundingClientRect();
+    hand.style.display='block';
+    hand.style.left=(br.left-st.left+br.width/2)+'px';
+    hand.style.top=(br.top-st.top+br.height*.55)+'px';
+    await sleep(900);
+    btn.classList.add('hint');await sleep(500);
+    place(btn._s,r);await sleep(700);
+  }
+  hand.style.display='none';
+  listEl.children[0].classList.add('ok');tone([660,880,1100],.12);
+  await sleep(1600);
+  demoDone=true;
+  tip.textContent='👆 Your turn';
+  load(ROUNDS[0]);lock=false;
+}
+
+async function newGame(){
+  round=0;stars.textContent='☆☆☆☆☆';
+  $('win').classList.remove('show');
+  if(!demoDone)await demo();
+  else{tip.textContent='';load(ROUNDS[0]);lock=false;}
+}
+$('done').onclick=check;
+$('again').onclick=newGame;
+newGame();
+</script>
+</body>
+</html>

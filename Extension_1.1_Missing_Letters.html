@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Practice 1 - Missing Letters</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden;font-family:"Comic Sans MS","Baloo 2","Trebuchet MS",sans-serif;user-select:none;touch-action:manipulation}
+  body{background:linear-gradient(#e7f5ff,#d0ebff);display:flex;flex-direction:column;align-items:center;color:#1864ab}
+
+  #hud{width:100%;display:flex;justify-content:space-between;align-items:center;padding:10px 18px}
+  #title{background:#fff;border-radius:20px;padding:6px 16px;font-weight:bold;color:#e8590c;font-size:clamp(16px,2.6vw,26px);box-shadow:0 3px 0 #ffd199}
+  #score{font-size:clamp(20px,3vw,30px);background:#fff;border-radius:20px;padding:4px 14px;box-shadow:0 3px 0 #a5d8ff}
+
+  #main{flex:1;width:min(96vw,760px);display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;padding-bottom:10px}
+
+  #numcard{display:flex;flex-direction:column;align-items:center;gap:8px}
+  #num{background:#fff;border:6px solid #ff922b;border-radius:30px;min-width:clamp(120px,20vw,190px);text-align:center;font-size:clamp(70px,14vw,130px);font-weight:bold;color:#e8590c;line-height:1.1;padding:0 24px;box-shadow:0 8px 0 #d9480f}
+  #num.change{animation:pop .4s}
+  @keyframes pop{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+  #dots{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:300px}
+  .dot{width:clamp(16px,3vw,24px);height:clamp(16px,3vw,24px);border-radius:50%;box-shadow:inset -3px -3px 0 rgba(0,0,0,.15)}
+
+  #q{font-size:clamp(18px,3.2vw,28px);font-weight:bold;text-align:center}
+  #word{display:flex;gap:clamp(6px,1.6vw,14px);justify-content:center}
+  .tile{width:clamp(56px,12vw,100px);height:clamp(68px,14vw,120px);background:#fff;border:5px solid #74c0fc;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:clamp(44px,9vw,80px);font-weight:bold;color:#1971c2;box-shadow:0 6px 0 #4dabf7}
+  .tile.blank{border:5px dashed #ff922b;background:#fff4e6;color:#d6336c;box-shadow:0 6px 0 #ffa94d;animation:blink 1.1s ease-in-out infinite}
+  @keyframes blink{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+  .tile.ok{background:#d3f9d8;border-color:#40c057;box-shadow:0 6px 0 #2f9e44;color:#2b8a3e;animation:none}
+  .tile.shake{animation:shake .45s}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-12px)}40%{transform:translateX(12px)}60%{transform:translateX(-8px)}80%{transform:translateX(8px)}}
+  #word.celebrate .tile{animation:hop .6s}
+  #word.celebrate .tile:nth-child(2){animation-delay:.08s}
+  #word.celebrate .tile:nth-child(3){animation-delay:.16s}
+  #word.celebrate .tile:nth-child(4){animation-delay:.24s}
+  #word.celebrate .tile:nth-child(5){animation-delay:.32s}
+  @keyframes hop{0%,100%{transform:translateY(0)}40%{transform:translateY(-22px)}}
+
+  #opts{display:flex;gap:clamp(10px,2.5vw,24px);justify-content:center;align-items:center}
+  #opts button{width:clamp(62px,13vw,100px);height:clamp(62px,13vw,100px);border:none;border-radius:50%;font:inherit;font-size:clamp(36px,8vw,64px);font-weight:bold;color:#fff;cursor:pointer;text-shadow:0 3px 0 rgba(0,0,0,.2);box-shadow:inset -8px -8px 0 rgba(0,0,0,.14),0 6px 0 rgba(0,0,0,.2);transition:transform .15s}
+  #opts button:active:not(:disabled){transform:translateY(4px)}
+  #opts button:disabled{filter:grayscale(1) brightness(1.3);cursor:not-allowed;opacity:.5}
+  #speak{width:clamp(50px,8vw,64px);height:clamp(50px,8vw,64px);border-radius:50%;border:none;background:#4dabf7;color:#fff;font-size:26px;cursor:pointer;box-shadow:0 5px 0 #1c7ed6}
+  #speak:active{transform:translateY(3px);box-shadow:0 2px 0 #1c7ed6}
+
+  #msg{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%) scale(0);font-size:clamp(36px,8vw,80px);font-weight:bold;color:#fff;text-shadow:0 4px 0 rgba(0,0,0,.35);z-index:40;pointer-events:none;white-space:nowrap}
+  #msg.show{animation:msg 1.1s forwards}
+  @keyframes msg{0%{transform:translate(-50%,-50%) scale(0)}25%{transform:translate(-50%,-50%) scale(1.15)}70%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(-50%,-50%) scale(1);opacity:0}}
+  .conf{position:fixed;font-size:28px;z-index:30;pointer-events:none;animation:fall 1.2s ease-out forwards}
+  @keyframes fall{from{transform:translate(0,0) scale(1);opacity:1}to{transform:translate(var(--dx),var(--dy)) rotate(360deg) scale(.6);opacity:0}}
+
+  #end{position:fixed;inset:0;background:rgba(231,245,255,.96);display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:50;text-align:center}
+  #end h1{font-size:clamp(36px,7vw,72px);color:#e8590c}
+  #end .big{font-size:clamp(28px,6vw,60px);max-width:90vw;line-height:1.3}
+  #start{position:fixed;inset:0;background:linear-gradient(#a5d8ff,#e7f5ff);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:60;text-align:center;padding:20px}
+  #start h1{font-size:clamp(34px,7vw,70px);color:#e8590c;text-shadow:0 3px 0 #fff}
+  #start p{font-size:clamp(18px,3vw,28px);max-width:700px}
+  .bigbtn{font:inherit;font-size:clamp(26px,5vw,44px);padding:12px 50px;border:none;border-radius:50px;background:#ff922b;color:#fff;cursor:pointer;box-shadow:0 7px 0 #d9480f}
+  .bigbtn:active{transform:translateY(5px);box-shadow:0 2px 0 #d9480f}
+</style>
+</head>
+<body>
+<div id="hud">
+  <div id="title">🔤 Missing Letters</div>
+  <div id="score">⭐ 0 / 10</div>
+</div>
+
+<div id="main">
+  <div id="numcard">
+    <div id="num">7</div>
+    <div id="dots"></div>
+  </div>
+  <div id="q">Which letter is missing?</div>
+  <div id="word"></div>
+  <div id="opts"></div>
+  <button id="speak" title="Listen">🔊</button>
+</div>
+
+<div id="msg"></div>
+
+<div id="start">
+  <h1>🔤 Missing Letters 🔤</h1>
+  <p>Look at the number.<br>Find the missing letter and finish the word!<br><b>7 → se_en</b> → the missing letter is <b>v</b></p>
+  <button class="bigbtn" id="startBtn">▶ Play</button>
+</div>
+
+<div id="end">
+  <h1>Super spelling! 🎉</h1>
+  <div class="big" id="endStars"></div>
+  <button class="bigbtn" id="again" style="background:#40c057;box-shadow:0 7px 0 #2b8a3e">↻ Play again</button>
+</div>
+
+<script>
+(function(){
+  var WORDS={6:"six",7:"seven",8:"eight",9:"nine",10:"ten"};
+  var COLORS=["#ff6b6b","#ffa94d","#51cf66","#339af0","#cc5de8","#f06595"];
+  var DOTC=["#ff6b6b","#ffa94d","#fcc419","#51cf66","#339af0","#cc5de8"];
+  var numEl=document.getElementById("num"),dotsEl=document.getElementById("dots"),wordEl=document.getElementById("word"),
+      optsEl=document.getElementById("opts"),scoreEl=document.getElementById("score"),msgEl=document.getElementById("msg");
+  var rounds,idx,score,cur,blankTile,locked,triedWrong,audioCtx;
+  var POOL="";
+  Object.keys(WORDS).forEach(function(k){WORDS[k].split("").forEach(function(c){if(POOL.indexOf(c)<0)POOL+=c})});
+
+  function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+  function tone(freq,dur,type,delay,vol){
+    try{
+      audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+      var o=audioCtx.createOscillator(),g=audioCtx.createGain();
+      o.type=type||"sine";o.frequency.value=freq;
+      var t0=audioCtx.currentTime+(delay||0);
+      g.gain.setValueAtTime(vol||.2,t0);g.gain.exponentialRampToValueAtTime(.001,t0+dur);
+      o.connect(g);g.connect(audioCtx.destination);o.start(t0);o.stop(t0+dur);
+    }catch(e){}
+  }
+  function sfxOK(){tone(880,.1,"triangle",0,.25);tone(1175,.15,"triangle",.1,.25);tone(1568,.25,"triangle",.2,.25)}
+  function sfxBad(){tone(220,.25,"sawtooth",0,.12);tone(165,.3,"sawtooth",.15,.12)}
+  function sfxTap(){tone(600,.08,"square",0,.06)}
+  function speak(t){try{if(!window.speechSynthesis)return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.lang="en-US";u.rate=.8;u.pitch=1.2;speechSynthesis.speak(u)}catch(e){}}
+  function showMsg(t){msgEl.textContent=t;msgEl.classList.remove("show");void msgEl.offsetWidth;msgEl.classList.add("show")}
+  function confetti(){
+    var r=wordEl.getBoundingClientRect(),em=["🎉","⭐","✨","🎊","💛"];
+    for(var i=0;i<14;i++){
+      var c=document.createElement("div");c.className="conf";c.textContent=em[i%em.length];
+      c.style.left=(r.left+r.width/2)+"px";c.style.top=r.top+"px";
+      c.style.setProperty("--dx",(Math.random()*300-150)+"px");
+      c.style.setProperty("--dy",(Math.random()*-260)+"px");
+      document.body.appendChild(c);
+      setTimeout(function(el){return function(){el.remove()}}(c),1300);
+    }
+  }
+
+  function makeRounds(){
+    var list=[];
+    [6,7,8,9,10].forEach(function(n){
+      var len=WORDS[n].length,pos=shuffle(Array.apply(null,Array(len)).map(function(_,i){return i}));
+      list.push({n:n,pos:pos[0]});list.push({n:n,pos:pos[1]});
+    });
+    list=shuffle(list);
+    /* avoid same number twice in a row */
+    for(var i=1;i<list.length;i++){
+      if(list[i].n===list[i-1].n){
+        for(var j=i+1;j<list.length;j++){if(list[j].n!==list[i-1].n&&(!list[i+1]||list[j].n!==list[i+1].n)){var t=list[i];list[i]=list[j];list[j]=t;break}}
+      }
+    }
+    return list;
+  }
+
+  function newRound(){
+    cur=rounds[idx];locked=false;triedWrong=false;
+    var w=WORDS[cur.n],miss=w[cur.pos];
+    numEl.textContent=cur.n;
+    numEl.classList.remove("change");void numEl.offsetWidth;numEl.classList.add("change");
+    dotsEl.innerHTML="";
+    for(var i=0;i<cur.n;i++){var d=document.createElement("div");d.className="dot";d.style.background=DOTC[i%DOTC.length];dotsEl.appendChild(d)}
+    wordEl.className="";wordEl.innerHTML="";
+    for(i=0;i<w.length;i++){
+      var t=document.createElement("div");t.className="tile";
+      if(i===cur.pos){t.classList.add("blank");t.textContent="?";blankTile=t}
+      else t.textContent=w[i];
+      wordEl.appendChild(t);
+    }
+    /* options: correct + 3 distractors not in the word */
+    var cand=shuffle(POOL.split("").filter(function(c){return w.indexOf(c)<0})).slice(0,3);
+    var opts=shuffle([miss].concat(cand));
+    optsEl.innerHTML="";
+    opts.forEach(function(c,i){
+      var b=document.createElement("button");b.textContent=c;b.style.background=COLORS[i%COLORS.length];
+      b.addEventListener("click",function(){choose(c,b)});
+      optsEl.appendChild(b);
+    });
+    setTimeout(function(){speak(w)},350);
+  }
+
+  function choose(c,btn){
+    if(locked)return;
+    var w=WORDS[cur.n],miss=w[cur.pos];
+    if(c===miss){
+      locked=true;
+      blankTile.textContent=c;blankTile.classList.remove("blank");blankTile.classList.add("ok");
+      Array.prototype.forEach.call(wordEl.children,function(t){t.classList.add("ok")});
+      wordEl.classList.add("celebrate");
+      sfxOK();confetti();showMsg(w+"! ✔");
+      if(!triedWrong){score++;scoreEl.textContent="⭐ "+score+" / 10"}
+      speak(w+". Good job!");
+      idx++;
+      setTimeout(function(){if(idx>=rounds.length)finish();else newRound()},1900);
+    }else{
+      triedWrong=true;sfxBad();
+      btn.disabled=true;
+      blankTile.textContent=c;
+      blankTile.classList.remove("shake");void blankTile.offsetWidth;blankTile.classList.add("shake");
+      setTimeout(function(){if(!locked)blankTile.textContent="?"},600);
+      speak("Try again!");
+    }
+  }
+
+  function finish(){
+    [523,659,784,1047].forEach(function(f,i){tone(f,.3,"triangle",i*.15,.25)});
+    var s="";for(var i=0;i<10;i++)s+=i<score?"⭐":"☆";
+    document.getElementById("endStars").textContent=s;
+    document.getElementById("end").style.display="flex";
+  }
+
+  function startGame(){
+    rounds=makeRounds();idx=0;score=0;
+    scoreEl.textContent="⭐ 0 / 10";
+    document.getElementById("end").style.display="none";
+    newRound();
+  }
+
+  document.addEventListener("keydown",function(e){
+    if(locked||!cur||e.key.length!==1)return;
+    var k=e.key.toLowerCase();
+    Array.prototype.forEach.call(optsEl.children,function(b){if(b.textContent===k&&!b.disabled){sfxTap();b.click()}});
+  });
+  document.getElementById("speak").addEventListener("click",function(){if(cur)speak(WORDS[cur.n])});
+  document.getElementById("startBtn").addEventListener("click",function(){
+    document.getElementById("start").style.display="none";
+    tone(1,.01,"sine",0,.001);
+    startGame();
+  });
+  document.getElementById("again").addEventListener("click",startGame);
+})();
+</script>
+</body>
+</html>

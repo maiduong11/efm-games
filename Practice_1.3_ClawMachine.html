@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Practice 1.3 – Claw machine</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap">
+<style>
+:root{
+  --bg:#eaf6f1;--card:#ffffff;--ink:#23403a;
+  --num:#ff9a3c;--word:#3b8fe0;--ok:#2fb36b;--glass:#d6efe8;--rail:#7b8a87;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#16302b;--card:#1f3d37;--ink:#eaf6f1;--glass:#25504a;--rail:#a6b5b1;}
+}
+:root[data-theme="dark"]{--bg:#16302b;--card:#1f3d37;--ink:#eaf6f1;--glass:#25504a;--rail:#a6b5b1;}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Baloo 2","Trebuchet MS",system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:10px}
+h1{margin:0;font-size:clamp(20px,5vw,32px);font-weight:800;text-align:center}
+#stars{font-size:clamp(18px,4vw,26px);letter-spacing:4px}
+#target{width:min(94vw,640px);background:var(--card);border-radius:22px;display:flex;align-items:center;justify-content:center;gap:18px;padding:8px 14px}
+#numcard{background:var(--num);color:#fff;border-radius:16px;min-width:84px;height:84px;display:flex;align-items:center;justify-content:center;font-size:62px;font-weight:800;box-shadow:0 5px 0 rgba(0,0,0,.18);transition:background .3s}
+#numcard.ok{background:var(--ok)}
+#side{display:flex;flex-direction:column;gap:4px;min-width:110px}
+#dots{display:flex;gap:6px;min-height:22px}
+#dots i{width:20px;height:20px;border-radius:50%;background:var(--num)}
+#answer{font-size:clamp(24px,6vw,36px);font-weight:800;min-height:1.2em}
+#stage{container-type:inline-size;position:relative;width:min(94vw,640px);aspect-ratio:10/7;background:var(--glass);border:3cqw solid var(--card);border-radius:24px;overflow:hidden;box-sizing:content-box}
+#rail{position:absolute;left:0;right:0;top:0;height:3cqw;background:var(--rail)}
+#car{position:absolute;top:2cqw;left:50%;width:0;transition:left .8s ease-in-out;z-index:5}
+#line{position:absolute;left:-.4cqw;width:.8cqw;height:6cqw;background:var(--rail);transition:height .8s ease-in-out}
+#head{position:absolute;left:0;top:100%;width:0}
+#head .plate{position:absolute;left:-5cqw;width:10cqw;height:3.4cqw;background:var(--rail);border-radius:1.2cqw}
+#head .arm{position:absolute;top:2.6cqw;width:2.4cqw;height:8cqw;background:var(--rail);border-radius:0 0 1.4cqw 1.4cqw;transform-origin:50% 0;transition:transform .35s}
+#head .l{left:-5cqw;transform:rotate(28deg)}
+#head .r{left:2.6cqw;transform:rotate(-28deg)}
+#head.closed .l{transform:rotate(-10deg)}
+#head.closed .r{transform:rotate(10deg)}
+.blk{position:absolute;left:var(--x);bottom:3cqw;width:20cqw;height:14cqw;transform:translateX(-50%);border:0;border-radius:2.4cqw;background:var(--word);color:#fff;font:inherit;font-weight:800;font-size:6.4cqw;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 .8cqw 0 rgba(0,0,0,.2);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.blk:focus-visible{outline:.8cqw solid var(--ink)}
+.blk.held{left:0;bottom:auto;top:8cqw;transform:translateX(-50%);cursor:default}
+.blk.fall{animation:fall .45s ease-in}
+@keyframes fall{from{transform:translateX(-50%) translateY(-14cqw)}to{transform:translateX(-50%) translateY(0)}}
+#chute{position:absolute;left:2cqw;bottom:3cqw;width:18cqw;height:14cqw;border-radius:2.4cqw;background:rgba(0,0,0,.45);display:flex;align-items:flex-start;justify-content:center;color:#fff;font-size:5cqw;z-index:1}
+#win{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
+#win.show{display:flex}
+#win div{background:var(--card);border-radius:28px;padding:28px 34px;text-align:center}
+#win h2{margin:0 0 6px;font-size:clamp(28px,7vw,44px)}
+#win p{margin:0 0 14px;font-size:clamp(34px,9vw,56px)}
+button.again{font:inherit;font-weight:800;font-size:24px;border:0;border-radius:16px;padding:10px 28px;background:var(--ok);color:#fff;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.2)}
+@media (prefers-reduced-motion:reduce){.blk.fall{animation:none}}
+</style>
+</head>
+<body>
+<h1>Catch the word!</h1>
+<div id="stars" aria-live="polite">☆☆☆☆☆☆</div>
+<div id="target">
+  <div id="numcard" aria-label="number"></div>
+  <div id="side"><div id="dots"></div><div id="answer"></div></div>
+</div>
+<div id="stage">
+  <div id="rail"></div>
+  <div id="chute">↓</div>
+  <div id="car"><div id="line"><div id="head"><div class="plate"></div><div class="arm l"></div><div class="arm r"></div></div></div></div>
+</div>
+<div id="win" role="dialog" aria-live="polite"><div><h2>Well done!</h2><p>⭐⭐⭐</p><button class="again" id="again">Play again</button></div></div>
+
+<script>
+const WORDS=['zero','one','two','three','four','five'];
+const XS=[38,62,86];            // block centres (% of stage width)
+const CHUTE_X=11, REST=6, DOWN=38, LIFT_WRONG=26;
+const stage=document.getElementById('stage'),car=document.getElementById('car'),
+      line=document.getElementById('line'),head=document.getElementById('head'),
+      numcard=document.getElementById('numcard'),dots=document.getElementById('dots'),
+      answer=document.getElementById('answer'),stars=document.getElementById('stars');
+let order=[],round=0,target=0,lock=true,blocks=[],ac=null;
+
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
+const setX=x=>car.style.left=x+'%';
+const setLen=l=>line.style.height=l+'cqw';
+
+function tone(freqs,dur){
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    freqs.forEach((f,i)=>{
+      const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime+i*dur;
+      o.frequency.value=f;o.type='sine';o.connect(g);g.connect(ac.destination);
+      g.gain.setValueAtTime(.2,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+      o.start(t);o.stop(t+dur);
+    });
+  }catch(e){}
+}
+function say(k){
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(WORDS[k]);u.lang='en-US';u.rate=.8;speechSynthesis.speak(u);}catch(e){}
+}
+
+function startRound(){
+  target=order[round];
+  numcard.textContent=target;numcard.classList.remove('ok');
+  dots.innerHTML='<i></i>'.repeat(target);
+  answer.textContent='';
+  blocks.forEach(b=>b.remove());blocks=[];
+  const others=shuffle([0,1,2,3,4,5].filter(k=>k!==target)).slice(0,2);
+  shuffle([target,...others]).forEach((k,i)=>{
+    const b=document.createElement('button');
+    b.className='blk';b.style.setProperty('--x',XS[i]+'%');
+    b.dataset.k=k;b.dataset.x=XS[i];b.textContent=WORDS[k];
+    b.setAttribute('aria-label','word '+WORDS[k]);
+    b.onclick=()=>pick(b);
+    stage.appendChild(b);blocks.push(b);
+  });
+  setX(50);setLen(REST);head.classList.remove('closed');
+  lock=false;
+}
+
+function hold(b){b.classList.add('held');head.appendChild(b);}
+function unhold(b){
+  b.classList.remove('held');b.style.cssText='';b.style.setProperty('--x',b.dataset.x+'%');
+  stage.appendChild(b);b.classList.add('fall');
+}
+
+async function pick(b){
+  if(lock)return;lock=true;
+  const k=+b.dataset.k;say(k);
+  setX(b.dataset.x);await sleep(850);
+  setLen(DOWN);await sleep(850);
+  head.classList.add('closed');await sleep(400);
+  hold(b);
+  if(k===target){
+    setLen(REST);await sleep(850);
+    setX(CHUTE_X);await sleep(900);
+    head.classList.remove('closed');
+    // release into the chute
+    b.classList.remove('held');stage.appendChild(b);
+    b.style.cssText='left:'+CHUTE_X+'%;bottom:auto;top:26cqw;transform:translateX(-50%);transition:top .6s ease-in,opacity .6s';
+    void b.offsetWidth;
+    b.style.top='56cqw';b.style.opacity='0';
+    tone([660,880,1100],.12);
+    await sleep(650);b.remove();
+    numcard.classList.add('ok');answer.textContent=target+' = '+WORDS[target];
+    say(target);
+    stars.textContent='⭐'.repeat(round+1)+'☆'.repeat(5-round);
+    await sleep(1600);
+    round++;
+    if(round===6){tone([523,659,784,1047],.18);document.getElementById('win').classList.add('show');}
+    else startRound();
+  }else{
+    setLen(LIFT_WRONG);await sleep(650);
+    head.classList.remove('closed');unhold(b);tone([220],.2);
+    await sleep(550);
+    setLen(REST);setX(50);await sleep(850);
+    lock=false;
+  }
+}
+
+function newGame(){
+  order=shuffle([0,1,2,3,4,5]);round=0;
+  stars.textContent='☆☆☆☆☆☆';
+  document.getElementById('win').classList.remove('show');
+  startRound();
+}
+document.getElementById('again').onclick=newGame;
+newGame();
+</script>
+</body>
+</html>

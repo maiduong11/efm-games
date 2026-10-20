@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Practice 2.1 - Balloon Pop</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden;font-family:"Comic Sans MS","Baloo 2","Trebuchet MS",sans-serif;user-select:none}
+  body{background:linear-gradient(#7fd3ff 0%,#c9f0ff 60%,#b6f08a 60%,#8fdc62 100%)}
+  .cloud{position:absolute;background:#fff;border-radius:50px;opacity:.9;animation:drift linear infinite}
+  .cloud::before,.cloud::after{content:"";position:absolute;background:#fff;border-radius:50%}
+  .cloud::before{width:50%;height:160%;left:15%;top:-60%}
+  .cloud::after{width:40%;height:130%;left:50%;top:-40%}
+  @keyframes drift{from{transform:translateX(-200px)}to{transform:translateX(110vw)}}
+  #hud{position:absolute;top:10px;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:0 18px;z-index:5}
+  #title{background:#fff;border-radius:20px;padding:6px 16px;font-weight:bold;color:#ff7a00;font-size:clamp(16px,2.6vw,26px);box-shadow:0 3px 0 #ffd199}
+  #stars{font-size:clamp(20px,3vw,30px);background:#fff;border-radius:20px;padding:4px 14px;box-shadow:0 3px 0 #cfe}
+  #sky{position:absolute;top:70px;left:0;right:0;height:52%;display:flex;justify-content:center;align-items:flex-start;gap:clamp(8px,3vw,40px);padding:0 10px}
+  .balloon{position:relative;width:clamp(70px,14vw,150px);height:clamp(90px,18vw,190px);border:none;border-radius:50% 50% 48% 48%/55% 55% 45% 45%;
+    color:#fff;font-size:clamp(40px,8vw,90px);font-weight:bold;cursor:pointer;
+    box-shadow:inset -10px -12px 0 rgba(0,0,0,.12), inset 8px 10px 0 rgba(255,255,255,.3);
+    text-shadow:0 3px 0 rgba(0,0,0,.2);animation:bob 2.4s ease-in-out infinite;transition:transform .15s}
+  .balloon::after{content:"";position:absolute;left:50%;bottom:-34px;width:2px;height:34px;background:#777;transform:translateX(-50%)}
+  .balloon::before{content:"";position:absolute;left:50%;bottom:-8px;border:9px solid transparent;border-bottom-color:inherit;border-top:0;transform:translateX(-50%);filter:brightness(.9)}
+  .balloon:nth-child(1){animation-delay:0s;margin-top:20px}
+  .balloon:nth-child(2){animation-delay:-.5s;margin-top:0}
+  .balloon:nth-child(3){animation-delay:-1s;margin-top:30px}
+  .balloon:nth-child(4){animation-delay:-1.5s;margin-top:5px}
+  .balloon:nth-child(5){animation-delay:-2s;margin-top:25px}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-14px) rotate(2deg)}}
+  .balloon:hover{filter:brightness(1.08)}
+  .balloon.pop{animation:pop .35s forwards;pointer-events:none}
+  @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1.8);opacity:0}}
+  .balloon.wrong{animation:shake .45s}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-14px)}40%{transform:translateX(14px)}60%{transform:translateX(-10px)}80%{transform:translateX(10px)}}
+  .balloon.gone{visibility:hidden}
+
+  #char{position:absolute;bottom:2vh;left:50%;transform:translateX(-50%);width:clamp(200px,30vw,340px);z-index:3}
+  #char svg{width:100%;display:block;overflow:visible}
+  #char.cheer{animation:jump .6s}
+  @keyframes jump{0%,100%{transform:translateX(-50%) translateY(0)}40%{transform:translateX(-50%) translateY(-30px)}}
+  #sign{position:absolute;left:50%;top:50%;transform:translate(-50%,-6%) rotate(-2deg);background:#fff8dc;border:5px solid #c98a3b;border-radius:14px;
+    padding:6px 18px;font-size:clamp(34px,6vw,64px);font-weight:bold;color:#d6336c;min-width:60%;text-align:center;box-shadow:0 5px 0 #a8702a;white-space:nowrap}
+  #sign.change{animation:signin .4s}
+  @keyframes signin{from{transform:translate(-50%,-6%) rotate(-2deg) scale(.3);opacity:0}to{transform:translate(-50%,-6%) rotate(-2deg) scale(1);opacity:1}}
+  #speak{position:absolute;right:-50px;top:10%;width:48px;height:48px;border-radius:50%;border:none;background:#4dabf7;color:#fff;font-size:24px;cursor:pointer;box-shadow:0 4px 0 #1c7ed6}
+  #speak:active{transform:translateY(3px);box-shadow:0 1px 0 #1c7ed6}
+  #hint{position:absolute;bottom:1vh;left:0;right:0;text-align:center;color:#2b6b00;font-weight:bold;font-size:clamp(14px,2vw,20px);z-index:1}
+
+  .shot{position:fixed;width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#ffd43b 40%,#f08c00);z-index:20;pointer-events:none;
+    transition:left .35s cubic-bezier(.3,.6,.5,1),top .35s cubic-bezier(.3,.6,.5,1);box-shadow:0 0 10px #ffd43b}
+  .conf{position:fixed;font-size:28px;z-index:30;pointer-events:none;animation:fall 1.2s ease-out forwards}
+  @keyframes fall{from{transform:translate(0,0) scale(1);opacity:1}to{transform:translate(var(--dx),var(--dy)) rotate(360deg) scale(.6);opacity:0}}
+
+  #end{position:absolute;inset:0;background:rgba(255,255,255,.92);display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:50;text-align:center}
+  #end h1{font-size:clamp(36px,7vw,72px);color:#ff7a00}
+  #end .big{font-size:clamp(40px,8vw,80px)}
+  #end button{font:inherit;font-size:clamp(22px,4vw,36px);padding:10px 36px;border:none;border-radius:40px;background:#40c057;color:#fff;cursor:pointer;box-shadow:0 6px 0 #2b8a3e}
+  #end button:active{transform:translateY(4px);box-shadow:0 2px 0 #2b8a3e}
+  #start{position:absolute;inset:0;background:linear-gradient(#7fd3ff,#c9f0ff);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:60;text-align:center;padding:20px}
+  #start h1{font-size:clamp(34px,7vw,70px);color:#ff7a00;text-shadow:0 3px 0 #fff}
+  #start p{font-size:clamp(18px,3vw,28px);color:#1864ab;max-width:700px}
+  #start button{font:inherit;font-size:clamp(26px,5vw,44px);padding:12px 50px;border:none;border-radius:50px;background:#ff922b;color:#fff;cursor:pointer;box-shadow:0 7px 0 #d9480f}
+  #start button:active{transform:translateY(5px);box-shadow:0 2px 0 #d9480f}
+</style>
+</head>
+<body>
+<div class="cloud" style="width:140px;height:40px;top:12%;animation-duration:60s"></div>
+<div class="cloud" style="width:100px;height:30px;top:30%;animation-duration:45s;animation-delay:-20s"></div>
+<div class="cloud" style="width:170px;height:46px;top:20%;animation-duration:80s;animation-delay:-40s"></div>
+
+<div id="hud">
+  <div id="title">🎈 Balloon Pop</div>
+  <div id="stars">⭐ 0 / 5</div>
+</div>
+
+<div id="sky"></div>
+
+<div id="char">
+  <svg viewBox="0 0 300 300" aria-hidden="true">
+    <!-- ears -->
+    <circle cx="95" cy="45" r="30" fill="#c98a3b"/><circle cx="95" cy="45" r="16" fill="#f3c98b"/>
+    <circle cx="205" cy="45" r="30" fill="#c98a3b"/><circle cx="205" cy="45" r="16" fill="#f3c98b"/>
+    <!-- body -->
+    <ellipse cx="150" cy="215" rx="95" ry="85" fill="#d9993f"/>
+    <ellipse cx="150" cy="225" rx="68" ry="62" fill="#f6dcae"/>
+    <!-- head -->
+    <circle cx="150" cy="90" r="68" fill="#d9993f"/>
+    <ellipse cx="150" cy="112" rx="34" ry="26" fill="#f6dcae"/>
+    <circle cx="125" cy="80" r="10" fill="#222"/><circle cx="175" cy="80" r="10" fill="#222"/>
+    <circle cx="128" cy="76" r="3.5" fill="#fff"/><circle cx="178" cy="76" r="3.5" fill="#fff"/>
+    <ellipse cx="150" cy="100" rx="9" ry="6" fill="#5b3a14"/>
+    <path d="M132 118 Q150 134 168 118" stroke="#5b3a14" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <circle cx="105" cy="105" r="9" fill="#ff9aa2" opacity=".7"/><circle cx="195" cy="105" r="9" fill="#ff9aa2" opacity=".7"/>
+    <!-- arms holding sign -->
+    <ellipse cx="62" cy="200" rx="22" ry="34" fill="#d9993f" transform="rotate(25 62 200)"/>
+    <ellipse cx="238" cy="200" rx="22" ry="34" fill="#d9993f" transform="rotate(-25 238 200)"/>
+    <!-- feet -->
+    <ellipse cx="100" cy="292" rx="34" ry="16" fill="#c98a3b"/><ellipse cx="200" cy="292" rx="34" ry="16" fill="#c98a3b"/>
+  </svg>
+  <div id="sign">six</div>
+  <button id="speak" title="Listen">🔊</button>
+</div>
+
+<div id="hint">Look at the word. Shoot the right number! 🎯</div>
+
+<div id="start">
+  <h1>🎈 Balloon Pop 🎈</h1>
+  <p>Look at the word the bear is holding.<br>Tap the balloon with the right number!</p>
+  <button id="startBtn">▶ Play</button>
+</div>
+
+<div id="end">
+  <h1>Great job! 🎉</h1>
+  <div class="big" id="endStars"></div>
+  <button id="again">↻ Play again</button>
+</div>
+
+<script>
+(function(){
+  var WORDS = {6:"six",7:"seven",8:"eight",9:"nine",10:"ten"};
+  var COLORS = ["#ff6b6b","#ffa94d","#51cf66","#339af0","#cc5de8"];
+  var sky = document.getElementById("sky");
+  var sign = document.getElementById("sign");
+  var charEl = document.getElementById("char");
+  var starsEl = document.getElementById("stars");
+  var order, idx, score, locked, triedWrong, audioCtx;
+
+  function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+
+  function tone(freq,dur,type,delay,vol){
+    try{
+      audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+      var o=audioCtx.createOscillator(), g=audioCtx.createGain();
+      o.type=type||"sine"; o.frequency.value=freq;
+      var t0=audioCtx.currentTime+(delay||0);
+      g.gain.setValueAtTime(vol||.2,t0); g.gain.exponentialRampToValueAtTime(.001,t0+dur);
+      o.connect(g); g.connect(audioCtx.destination); o.start(t0); o.stop(t0+dur);
+    }catch(e){}
+  }
+  function sfxShoot(){tone(700,.12,"square",0,.08);tone(400,.12,"square",.05,.06)}
+  function sfxPop(){tone(880,.1,"triangle",0,.25);tone(1175,.15,"triangle",.08,.25);tone(1568,.25,"triangle",.17,.25)}
+  function sfxWrong(){tone(220,.25,"sawtooth",0,.12);tone(165,.3,"sawtooth",.15,.12)}
+  function sfxWin(){[523,659,784,1047].forEach(function(f,i){tone(f,.3,"triangle",i*.15,.25)})}
+
+  function speak(text){
+    try{
+      if(!window.speechSynthesis) return;
+      speechSynthesis.cancel();
+      var u=new SpeechSynthesisUtterance(text);
+      u.lang="en-US"; u.rate=.8; u.pitch=1.2;
+      speechSynthesis.speak(u);
+    }catch(e){}
+  }
+
+  function buildBalloons(){
+    sky.innerHTML="";
+    shuffle([6,7,8,9,10]).forEach(function(n,i){
+      var b=document.createElement("button");
+      b.className="balloon"; b.textContent=n; b.dataset.n=n;
+      b.style.background=COLORS[i%COLORS.length];
+      b.style.borderBottomColor=COLORS[i%COLORS.length];
+      b.addEventListener("click",function(){onShoot(b)});
+      sky.appendChild(b);
+    });
+  }
+
+  function newRound(){
+    locked=false; triedWrong=false;
+    buildBalloons();
+    var w=WORDS[order[idx]];
+    sign.textContent=w;
+    sign.classList.remove("change"); void sign.offsetWidth; sign.classList.add("change");
+    setTimeout(function(){speak(w)},300);
+  }
+
+  function confetti(x,y){
+    var em=["🎉","⭐","✨","🎊","💛"];
+    for(var i=0;i<14;i++){
+      var c=document.createElement("div");
+      c.className="conf"; c.textContent=em[i%em.length];
+      c.style.left=x+"px"; c.style.top=y+"px";
+      c.style.setProperty("--dx",(Math.random()*300-150)+"px");
+      c.style.setProperty("--dy",(Math.random()*260-80)+"px");
+      document.body.appendChild(c);
+      setTimeout(function(el){return function(){el.remove()}}(c),1300);
+    }
+  }
+
+  function onShoot(b){
+    if(locked) return;
+    locked=true;
+    sfxShoot();
+    var cr=charEl.getBoundingClientRect(), br=b.getBoundingClientRect();
+    var shot=document.createElement("div");
+    shot.className="shot";
+    shot.style.left=(cr.left+cr.width/2-13)+"px";
+    shot.style.top=(cr.top+cr.height*0.35)+"px";
+    document.body.appendChild(shot);
+    void shot.offsetWidth;
+    var tx=br.left+br.width/2-13, ty=br.top+br.height/2-13;
+    shot.style.left=tx+"px"; shot.style.top=ty+"px";
+    setTimeout(function(){
+      shot.remove();
+      if(+b.dataset.n===order[idx]) correct(b,tx,ty);
+      else wrong(b);
+    },370);
+  }
+
+  function correct(b,x,y){
+    sfxPop();
+    b.classList.add("pop");
+    confetti(x,y);
+    if(!triedWrong){score++; starsEl.textContent="⭐ "+score+" / 5"}
+    charEl.classList.remove("cheer"); void charEl.offsetWidth; charEl.classList.add("cheer");
+    speak("Good job! "+WORDS[order[idx]]);
+    idx++;
+    setTimeout(function(){
+      if(idx>=order.length) finish(); else newRound();
+    },1500);
+  }
+
+  function wrong(b){
+    sfxWrong();
+    triedWrong=true;
+    b.classList.remove("wrong"); void b.offsetWidth; b.classList.add("wrong");
+    setTimeout(function(){locked=false},450);
+  }
+
+  function finish(){
+    sfxWin();
+    var s="";
+    for(var i=0;i<5;i++) s+= i<score?"⭐":"☆";
+    document.getElementById("endStars").textContent=s;
+    document.getElementById("end").style.display="flex";
+  }
+
+  function startGame(){
+    order=shuffle([6,7,8,9,10]); idx=0; score=0;
+    starsEl.textContent="⭐ 0 / 5";
+    document.getElementById("end").style.display="none";
+    newRound();
+  }
+
+  document.getElementById("speak").addEventListener("click",function(){ if(order) speak(WORDS[order[Math.min(idx,4)]]) });
+  document.getElementById("startBtn").addEventListener("click",function(){
+    document.getElementById("start").style.display="none";
+    tone(1,.01,"sine",0,0.001);
+    startGame();
+  });
+  document.getElementById("again").addEventListener("click",startGame);
+})();
+</script>
+</body>
+</html>
