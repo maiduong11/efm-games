@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đi học qua cầu – Toán lớp 1</title>
+<style>
+:root{--bg:#FBF3E6;--ink:#2B1A0E;--acc:#F27B21;--accd:#C4570A;--line:#F0DFC6;--ok:#2E9E5B;--bad:#D64545}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink);
+ font-family:'Baloo 2','Nunito',system-ui,sans-serif;font-weight:800}
+.app{height:100vh;height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr);gap:1.5vh;padding:1.5vh 3vw}
+.top{display:flex;align-items:center;gap:3vw}
+.tt{flex:1;min-width:0}
+h1{margin:0;font-size:clamp(18px,4vh,30px);line-height:1.1}
+.ins{margin:.3vh 0 0;font-size:clamp(12px,2.2vh,17px);font-weight:700}
+.prog{display:flex;align-items:center;gap:8px;font-size:clamp(13px,2.4vh,19px)}
+.dot{width:max(14px,2.4vh);height:max(14px,2.4vh);border-radius:50%;background:#fff;border:3px solid var(--line)}
+.dot.on{background:var(--ok);border-color:var(--ok)}
+.dot.now{border-color:var(--acc)}
+.scene{position:relative;min-height:0;border-radius:22px;border:4px solid var(--line);overflow:hidden;background:#CDEBFF}
+.scene>*{position:absolute}
+.sun{right:4%;top:4%;font-size:min(8vh,12vw)}
+.cloud{left:30%;top:6%;font-size:min(8vh,12vw);opacity:.9}
+.land{background:linear-gradient(#7ACB6B 0 12px,#5DB257 12px)}
+.land.l{left:0;border-radius:0 18px 0 0}
+.land.r{border-radius:18px 0 0 0}
+.em{transform:translate(-50%,-100%);line-height:1}
+.pil{background:linear-gradient(90deg,#9C6A3A,#7A4F27);border-radius:3px 3px 0 0}
+.pk{background:linear-gradient(#D49A58,#B97B3A);border:1.5px solid #8B5A2B;border-bottom-width:3px}
+.pk.bad{background:transparent;border:3px dashed var(--bad);animation:pulse 1.2s infinite}
+@keyframes pulse{50%{background:rgba(255,255,255,.45)}}
+#deco{left:0;top:0;width:100%;height:100%}
+.kid{transform:translate(-50%,-100%);transition:left .45s linear,top .45s linear}
+.kid svg{display:block;overflow:visible}
+.lg{transform-box:fill-box;transform-origin:50% 0}
+.walking .a{animation:sw .22s infinite alternate ease-in-out}
+.walking .b{animation:sw .22s infinite alternate-reverse ease-in-out}
+@keyframes sw{from{transform:rotate(-24deg)}to{transform:rotate(24deg)}}
+.toast{left:50%;top:18%;transform:translateX(-50%);background:#fff;border:3px solid var(--ok);border-radius:99px;
+ padding:.6vh 18px;font-size:clamp(15px,3vh,24px);white-space:nowrap;opacity:0;transition:opacity .3s}
+.toast.on{opacity:1}
+.ov{position:fixed;inset:0;background:rgba(43,26,14,.5);display:flex;align-items:center;justify-content:center;z-index:5;padding:2vh 3vw}
+.pn{width:min(94vw,580px);max-height:96dvh;background:#fff;border:4px solid var(--accd);border-radius:24px;
+ padding:2vh 3vw;text-align:center;display:flex;flex-direction:column;gap:1.4vh;align-items:center}
+.pn h2{margin:0;font-size:clamp(18px,3.8vh,30px)}
+.pn p{margin:0;font-size:clamp(13px,2.4vh,19px);font-weight:700}
+.sq{--b:min(10vh,10.5vw,64px);display:flex;gap:6px;justify-content:center}
+.bx{width:var(--b);height:var(--b);display:flex;align-items:center;justify-content:center;border-radius:12px;
+ background:#FFE2C2;font-size:calc(var(--b)*.6);line-height:1}
+.bx.gp{background:#FFF8E1;border:3px dashed var(--acc);color:var(--accd)}
+.bx.gp.ok{background:#EAF7EF;border:3px solid var(--ok);color:var(--ok)}
+.bx.gp.no{animation:shake .4s;border-color:var(--bad);background:#FFE1E1}
+@keyframes shake{25%{translate:-6px 0}75%{translate:6px 0}}
+.fb{min-height:3.4vh;font-size:clamp(14px,2.6vh,21px)}
+.fb.ok{color:var(--ok)}.fb.no{color:var(--bad)}
+.keys{display:grid;grid-template-columns:repeat(6,1fr);gap:1.1vh 1.6vw;width:100%}
+.keys button{height:max(44px,7.5vh);border-radius:14px;border:3px solid var(--line);background:#fff;color:var(--ink);
+ font:inherit;font-size:clamp(20px,4vh,32px);cursor:pointer}
+.keys button:active{background:#FFE2C2}
+.keys .bk{grid-column:span 2;background:var(--acc);border-color:var(--accd)}
+button:focus-visible{outline:4px solid #345FA8;outline-offset:2px}
+.end{grid-row:1/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3vh;text-align:center}
+.end .st{font-size:min(12vh,14vw)}
+.end h2{margin:0;font-size:min(6vh,8vw)}
+.big{height:max(56px,9vh);padding:0 6vw;border-radius:20px;border:4px solid var(--accd);background:var(--acc);
+ color:var(--ink);font:inherit;font-size:min(5vh,7vw);cursor:pointer;box-shadow:0 5px 0 var(--accd)}
+@media (prefers-reduced-motion:reduce){.pk.bad,.bx.gp.no{animation:none}.kid{transition:none}}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+const CH=[{P:10,q:2,len:5},{P:12,q:3,len:6},{P:12,q:3,len:7}]; // số ván, số ván hỏng, độ dài dãy số
+const KID=`<svg viewBox="0 0 40 64" width="100%" height="100%"><g class="lg a"><rect x="16" y="42" width="6" height="17" rx="3" fill="#2B3A67"/><ellipse cx="21" cy="60" rx="6.5" ry="3.2" fill="#E85D5D"/></g><g class="lg b"><rect x="22" y="42" width="6" height="17" rx="3" fill="#2B3A67"/><ellipse cx="27" cy="60" rx="6.5" ry="3.2" fill="#E85D5D"/></g><rect x="6" y="23" width="10" height="19" rx="4" fill="#F2A33A"/><rect x="13" y="22" width="16" height="23" rx="6" fill="#3C7DD9"/><line x1="21" y1="26" x2="27" y2="37" stroke="#FFD7B5" stroke-width="4.5" stroke-linecap="round"/><circle cx="21" cy="13" r="10" fill="#FFD7B5"/><path d="M11 12 Q11 2 21 2 Q31 2 31 12 Q27 6 21 7 Q15 6 11 12Z" fill="#3B2A1A"/><circle cx="26" cy="14" r="1.5" fill="#222"/><path d="M23 18 Q26 20.5 29 18" stroke="#B0503A" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>`;
+const app=document.getElementById('app');
+let ch=0,P,broken,fixed,pos,ov=null,tgt,seq,gap,buf,lock;
+const rand=n=>Math.floor(Math.random()*n);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rand(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+function say(t){try{const u=new SpeechSynthesisUtterance(t);u.lang='vi-VN';u.rate=.8;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+
+function startChang(){
+ const c=CH[ch];P=c.P;fixed=new Set();pos=-1;
+ broken=new Set();
+ for(const k of shuffle(Array.from({length:P-4},(_,i)=>i+2))){
+  if(broken.size>=c.q)break;
+  if(![...broken].some(x=>Math.abs(x-k)<2))broken.add(k);
+ }
+ const dots=CH.map((_,i)=>`<span class="dot ${i<ch?'on':''} ${i===ch?'now':''}"></span>`).join('');
+ app.innerHTML=`<div class="top"><div class="tt"><h1>Đi học qua cầu</h1><p class="ins">Bước qua từng ván gỗ. Gặp ván hỏng thì điền số còn thiếu nhé!</p></div><div class="prog">${dots}<span>Chặng ${ch+1}/${CH.length}</span></div></div><div class="scene" id="scene"></div>`;
+ const sc=document.getElementById('scene');
+ sc.innerHTML=`<span class="sun">☀️</span><span class="cloud">☁️</span><div class="land l" id="ll"></div><div class="land r" id="lr"></div>
+ <span class="em" id="eL">${ch===0?'🏠':'🌳'}</span><span class="em" id="eR">${ch===CH.length-1?'🏫':'🌳'}</span>`
+ +`<svg id="deco" xmlns="http://www.w3.org/2000/svg"></svg>`
+ +Array.from({length:P},(_,i)=>i%3===1?`<div class="pil" data-i="${i}"></div>`:'').join('')
+ +Array.from({length:P},(_,i)=>`<div class="pk" data-i="${i}"></div>`).join('')
+ +`<div class="kid" id="kid">${KID}</div><div class="toast" id="toast"></div>`;
+ place();
+ setTimeout(step,800);
+}
+function place(){
+ const sc=document.getElementById('scene');if(!sc)return;
+ const W=sc.clientWidth,H=sc.clientHeight;
+ const xs=W*.22,xe=W*.78,T=Math.max(14,Math.min(30,H*.055));
+ document.getElementById('deco').setAttribute('viewBox',`0 0 ${W} ${H}`);
+ const arch=Math.min(H*.2,W*.17),baseY=H*.66;
+ // cầu vồng thấp: dốc lên - mặt cầu phẳng - dốc xuống
+ const R=.3,sm=u=>u*u*(3-2*u);
+ const prof=t=>t<R?sm(t/R):t>1-R?sm((1-t)/R):1;
+ const pt=i=>{
+  if(i<0||i>=P){const dx=(xe-xs)/(P-1);return{x:i<0?xs-dx:xe+dx,y:baseY}}
+  const t=i/(P-1);return{x:xs+(xe-xs)*t,y:baseY-arch*prof(t)}};
+ let sum=0;for(let i=0;i<P-1;i++){const a=pt(i),b=pt(i+1);sum+=Math.hypot(b.x-a.x,b.y-a.y)}
+ const avg=sum/(P-1),Lp=avg*1.1;
+ {// dầm đỡ liền mạch dưới mặt cầu + lan can
+  const Rh=T*2.6,d=[],d2=[],d3=[];let posts='';
+  for(let i=0;i<P;i++){const p=pt(i);
+   d.push(`${i?'L':'M'}${p.x} ${p.y+T/2+2}`);
+   d2.push(`${i?'L':'M'}${p.x} ${p.y-Rh}`);
+   d3.push(`${i?'L':'M'}${p.x} ${p.y-Rh*.5}`);
+   if(i%2===0)posts+=`<line x1="${p.x}" y1="${p.y}" x2="${p.x}" y2="${p.y-Rh}"/>`}
+  document.getElementById('deco').innerHTML=
+   `<path d="${d.join('')}" fill="none" stroke="#6B4220" stroke-width="${T*.45}" stroke-linecap="round" stroke-linejoin="round"/>`+
+   `<g stroke="#8B5A2B" stroke-width="${Math.max(3,T*.22)}" stroke-linecap="round">${posts}</g>`+
+   `<path d="${d3.join('')}" fill="none" stroke="#A8743C" stroke-width="${Math.max(2,T*.14)}" stroke-linecap="round" stroke-linejoin="round"/>`+
+   `<path d="${d2.join('')}" fill="none" stroke="#B9824A" stroke-width="${Math.max(3.5,T*.26)}" stroke-linecap="round" stroke-linejoin="round"/>`;
+ }
+ sc.style.background=`linear-gradient(#CDEBFF ${baseY+T/2}px,#6FBDEB ${baseY+T/2}px)`;
+ sc.querySelectorAll('.pk').forEach(el=>{
+  const i=+el.dataset.i,p=pt(i),a=pt(i-1),b=pt(i+1);
+  const ang=Math.atan2(b.y-a.y,b.x-a.x);
+  el.className='pk'+(broken.has(i)&&!fixed.has(i)?' bad':'');
+  Object.assign(el.style,{width:Lp+'px',height:T+'px',left:(p.x-Lp/2)+'px',top:(p.y-T/2)+'px',transform:`rotate(${ang}rad)`});
+ });
+ sc.querySelectorAll('.pil').forEach(el=>{
+  const i=+el.dataset.i,p=pt(i),w=Math.max(6,T*.5);
+  Object.assign(el.style,{width:w+'px',left:(p.x-w/2)+'px',top:(p.y+T/2)+'px',height:(H-p.y-T/2)+'px'});
+ });
+ const top=baseY-T/2,ll=document.getElementById('ll'),lr=document.getElementById('lr');
+ Object.assign(ll.style,{top:top+'px',width:(xs-Lp*.45)+'px',height:(H-top)+'px'});
+ const rl=xe+Lp*.45;
+ Object.assign(lr.style,{top:top+'px',left:rl+'px',width:(W-rl)+'px',height:(H-top)+'px'});
+ const ef=Math.min(H*.12,W*.11,60);
+ [['eL',W*.07],['eR',W*.93]].forEach(([id,x])=>{const e=document.getElementById(id);
+  Object.assign(e.style,{left:x+'px',top:(top+3)+'px',fontSize:ef+'px'})});
+ const k=pt(pos),kid=document.getElementById('kid');
+ const kh=Math.max(44,Math.min(96,avg*3,H*.17));
+ Object.assign(kid.style,{left:k.x+'px',top:(k.y-T/2)+'px',height:kh+'px',width:(kh*.625)+'px'});
+}
+function step(){
+ if(ov)return;
+ const next=pos+1;
+ if(next<P&&broken.has(next)&&!fixed.has(next)){ask(next);return}
+ pos=next;place();
+ const kd=document.getElementById('kid');kd.classList.add('walking');setTimeout(()=>kd.classList.remove('walking'),440);
+ if(pos===P){setTimeout(arrive,700);return}
+ setTimeout(step,480);
+}
+function arrive(){
+ if(ch===CH.length-1){end();return}
+ const t=document.getElementById('toast');t.textContent='Qua cầu rồi! 🎉';t.classList.add('on');
+ setTimeout(()=>{ch++;startChang()},1400);
+}
+function ask(i){
+ const len=CH[ch].len,s=rand(11-len+1);
+ seq=Array.from({length:len},(_,k)=>s+k);gap=1+rand(len-2);buf='';lock=false;tgt=i;
+ const keys=[1,2,3,4,5,6,7,8,9,0].map(d=>`<button data-k="${d}">${d}</button>`).join('')+`<button class="bk" data-k="bk" aria-label="xóa">⌫</button>`;
+ ov=document.createElement('div');ov.className='ov';
+ ov.innerHTML=`<div class="pn"><h2>Ván gỗ bị hỏng! 🪵</h2><p>Điền số còn thiếu để sửa cầu:</p><div class="sq" id="sq"></div><div class="fb" id="fb">&nbsp;</div><div class="keys">${keys}</div></div>`;
+ document.body.appendChild(ov);paintSeq();
+}
+function paintSeq(cls){
+ document.getElementById('sq').innerHTML=seq.map((v,k)=>k===gap?`<span class="bx gp ${cls||''}">${buf||'?'}</span>`:`<span class="bx">${v}</span>`).join('');
+}
+function fb(t,c){const f=document.getElementById('fb');f.textContent=t;f.className='fb '+(c||'')}
+function press(d){
+ if(!ov||lock)return;
+ if(d==='bk'){buf=buf.slice(0,-1);fb('\u00a0');paintSeq();return}
+ const ans=String(seq[gap]),nb=buf+d;
+ if(nb===ans){
+  lock=true;buf=nb;paintSeq('ok');fb('Giỏi quá! 👏','ok');say(ans);
+  setTimeout(()=>{ov.remove();ov=null;fixed.add(tgt);place();setTimeout(step,350)},1000);
+ }else if(nb.length<ans.length&&ans.startsWith(nb)){buf=nb;fb('\u00a0');paintSeq()}
+ else{
+  lock=true;buf=nb;paintSeq('no');fb('Chưa đúng, thử lại nhé!','no');
+  setTimeout(()=>{buf='';lock=false;paintSeq()},600);
+ }
+}
+function end(){
+ app.innerHTML=`<div class="end"><div class="st">🏫⭐</div><h2>Con đã tới trường rồi! 🎉</h2><button class="big" data-k="again">Chơi lại</button></div>`;
+}
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-k]');if(!b)return;
+ if(b.dataset.k==='again'){ch=0;startChang();return}
+ press(b.dataset.k);
+});
+document.addEventListener('keydown',e=>{
+ if(!ov)return;
+ if(/^[0-9]$/.test(e.key))press(e.key);else if(e.key==='Backspace')press('bk');
+});
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(place,120)});
+startChang();
+</script>
+</body>
+</html>
