@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Number Wheel – Math Kids</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FBF3E6;--ink:#2B1A0E;--acc:#F27B21;--accd:#C4570A;--accl:#FFE2C2;--line:#F0DFC6;--ok:#2E9E5B;--bad:#D64545;--fs:clamp(13px,2.6vh,20px)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:'Nunito',system-ui,sans-serif;font-weight:600;font-size:var(--fs)}
+.app{height:100vh;height:100dvh;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;gap:1vh;padding:1.2vh 2vw;overflow:hidden}
+.top{display:flex;align-items:center;gap:2vw}
+h1{font:800 clamp(16px,3.6vh,28px)/1.1 'Baloo 2',sans-serif;margin:0;white-space:nowrap}
+.cnt{margin-left:auto;font:800 var(--fs) 'Nunito',sans-serif;background:#fff;border:3px solid var(--line);border-radius:99px;padding:.4vh 14px}
+.tools{display:flex;gap:8px}
+.tb{min-height:max(40px,5vh);min-width:max(40px,5vh);padding:0 12px;border-radius:12px;border:3px solid var(--line);background:#fff;color:var(--ink);font:800 var(--fs) 'Nunito',sans-serif;cursor:pointer}
+.ins{margin:0;text-align:center;font-weight:800}
+.stage{min-height:0;display:flex;align-items:center;justify-content:center}
+.wheel{--w:min(94vw,74vh);--bs:calc(var(--w)*.16);--R:calc(var(--w)*.5 - var(--bs)*.5 - 3px);--cs:calc(var(--w)*.36);position:relative;width:var(--w);height:var(--w)}
+.ring{position:absolute;left:50%;top:50%;width:calc(var(--R)*2);height:calc(var(--R)*2);margin:calc(var(--R)*-1) 0 0 calc(var(--R)*-1);border:4px solid var(--ink);border-radius:50%}
+.nb{position:absolute;left:50%;top:50%;width:var(--bs);height:var(--bs);margin:calc(var(--bs)/-2) 0 0 calc(var(--bs)/-2);padding:0;border-radius:50%;border:4px solid var(--ink);background:#fff;color:var(--ink);cursor:pointer;font:800 calc(var(--bs)*.52)/1 'Baloo 2',sans-serif;transform:rotate(var(--a)) translateY(calc(var(--R)*-1)) rotate(calc(var(--a)*-1))}
+.nb:not(:disabled):hover{background:var(--accl)}
+.nb.ok{background:var(--ok);border-color:#1F7A44;color:#fff}
+.nb:disabled{cursor:default}
+.nb.in{animation:popin .45s ease-out backwards;animation-delay:var(--d)}
+.nb.no{animation:shake .4s}
+.nb.pulse{animation:pulse .7s ease-in-out 3}
+@keyframes popin{from{scale:0;opacity:0}}
+@keyframes shake{25%{translate:-6px 0}75%{translate:6px 0}}
+@keyframes pulse{50%{scale:1.25;background:var(--accl)}}
+.ctr{position:absolute;left:50%;top:50%;width:var(--cs);height:var(--cs);margin:calc(var(--cs)/-2) 0 0 calc(var(--cs)/-2);border-radius:50%;border:4px solid var(--accd);background:var(--accl);color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4vh;padding:0}
+.ctr b{font:800 calc(var(--w)*.095)/1 'Baloo 2',sans-serif}
+.ctr i{font-style:normal;font-size:calc(var(--w)*.05)}
+.msg{min-height:4.5vh;text-align:center;font-weight:800;font-size:clamp(15px,3vh,24px)}
+.msg.ok{color:#1F7A44}.msg.bad{color:#B83A3A}
+.end{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2vh;grid-row:3}
+.end .stars{font-size:min(10vh,12vw)}
+.end h2{font:800 clamp(24px,6vh,44px) 'Baloo 2',sans-serif;margin:0}
+.chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;max-width:90vw}
+.chip{padding:.6vh 12px;border-radius:99px;background:var(--accl);font-weight:800}
+.chip.first{background:#DDF1E7}
+.big{min-height:max(48px,6vh);padding:0 28px;border-radius:16px;border:3px solid var(--accd);background:var(--acc);color:var(--ink);font:800 clamp(16px,3.2vh,24px) 'Baloo 2',sans-serif;cursor:pointer;box-shadow:0 4px 0 var(--accd)}
+button:focus-visible{outline:4px solid #345FA8;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.nb.no,.nb.pulse,.nb.in{animation:none}}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+const W=['zero','one','two','three','four','five','six','seven','eight','nine','ten'];
+const T={
+ vi:{title:'Vòng quay số',ins:'Đọc chữ ở giữa, rồi chạm vào số đúng trên vòng tròn.',
+  ok:n=>'Đúng rồi! '+W[n]+' = '+n,no:'Chưa đúng. Nghe lại và thử nữa nhé!',
+  fin:'Hoàn thành!',again:'Chơi lại',first:'đúng ngay lần đầu',retry:'đã thử lại',sound:'Âm thanh',lang:'EN',hear:'Nghe lại'},
+ en:{title:'Number Wheel',ins:'Read the word in the middle, then tap the matching number on the wheel.',
+  ok:n=>'Yes! '+W[n]+' = '+n,no:'Not yet. Listen again and try once more!',
+  fin:'All done!',again:'Play again',first:'right first time',retry:'tried again',sound:'Sound',lang:'VI',hear:'Listen again'}
+};
+let lang='vi',muted=false,S;
+const $=document.getElementById('app');
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const sorted=a=>a.every((x,i)=>i===0||x>a[i-1])||a.every((x,i)=>i===0||x<a[i-1]);
+function mix(prev){let a;do{a=shuffle([0,1,2,3,4,5,6,7,8,9,10])}while(sorted(a)||(prev&&a.filter((x,i)=>x===prev[i]).length>1));return a}
+function say(t){if(muted)return;try{const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=.8;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+function log(r){try{const k='mathkids-log-number-wheel',a=JSON.parse(localStorage.getItem(k)||'[]');a.push(Object.assign({t:Date.now()},r));localStorage.setItem(k,JSON.stringify(a.slice(-500)))}catch(e){}}
+function reset(){S={ring:mix(),queue:shuffle([0,1,2,3,4,5,6,7,8,9,10]),qi:0,res:{},tries:0,msg:'',cls:'',lock:false,shake:-1,hit:-1,pulse:false,fin:false,fresh:true};render();setTimeout(()=>say(W[S.queue[0]]),300)}
+function render(){
+ const t=T[lang];
+ let h=`<div class="top"><h1>${t.title}</h1><span class="cnt" aria-label="progress">${S.qi}/11</span><div class="tools"><button class="tb" data-a="snd" aria-pressed="${!muted}" aria-label="${t.sound}">${muted?'🔇':'🔊'}</button><button class="tb" data-a="lang">${t.lang}</button></div></div>`;
+ if(S.fin){
+  const ch=Object.keys(S.res).map(Number).sort((a,b)=>a-b).map(n=>`<span class="chip ${S.res[n]?'first':''}">${n} · ${S.res[n]?t.first:t.retry}</span>`).join('');
+  h+=`<p class="ins">&nbsp;</p><div class="end"><div class="stars">⭐⭐⭐⭐⭐</div><h2>${t.fin}</h2><div class="chips">${ch}</div><button class="big" data-a="again">${t.again}</button></div><div class="msg"></div>`;
+  $.innerHTML=h;return}
+ const target=S.queue[S.qi];
+ h+=`<p class="ins">${t.ins}</p><div class="stage"><div class="wheel"><div class="ring"></div>`;
+ h+=S.ring.map((n,k)=>`<button class="nb ${S.hit===n?'ok':''} ${S.fresh?'in':''} ${S.shake===n?'no':''} ${S.pulse&&n===target?'pulse':''}" style="--a:${(k*360/11).toFixed(2)}deg;--d:${(k*.04).toFixed(2)}s" data-a="n" data-n="${n}" aria-label="${n}" ${S.lock?'disabled':''}>${n}</button>`).join('');
+ h+=`<button class="ctr" data-a="hear" aria-label="${t.hear}"><b>${W[target]}</b><i>🔊</i></button></div></div>`;
+ h+=`<div class="msg ${S.cls}" role="status" aria-live="polite">${S.msg}</div>`;
+ $.innerHTML=h;S.fresh=false}
+$.addEventListener('click',e=>{
+ const b=e.target.closest('[data-a]');if(!b||b.disabled)return;
+ const a=b.dataset.a,t=T[lang];
+ if(a==='lang'){lang=lang==='vi'?'en':'vi';render();return}
+ if(a==='snd'){muted=!muted;if(muted)try{speechSynthesis.cancel()}catch(x){}render();return}
+ if(a==='again'){reset();return}
+ if(S.fin||S.lock)return;
+ const target=S.queue[S.qi];
+ if(a==='hear'){say(W[target]);return}
+ if(a==='n'){
+  const n=+b.dataset.n;
+  if(n===target){
+   S.res[n]=S.tries===0;log({n,ok:true,tries:S.tries+1});
+   S.msg=t.ok(n);S.cls='ok';S.lock=true;S.pulse=false;S.hit=n;render();say(W[n]);
+   setTimeout(()=>{S.qi++;S.tries=0;S.msg='';S.cls='';S.lock=false;S.hit=-1;
+    if(S.qi>=11){S.fin=true;render()}else{S.ring=mix(S.ring);S.fresh=true;render();say(W[S.queue[S.qi]])}},1300)}
+  else{S.tries++;log({target,ok:false,chosen:n});S.msg=t.no;S.cls='bad';S.shake=n;S.pulse=S.tries>=2;render();S.shake=-1;say(W[target])}
+ }});
+reset();
+</script>
+</body>
+</html>
