@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Look and write to match each row – Math Kids</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FBF3E6;--ink:#2B1A0E;--acc:#F27B21;--accd:#C4570A;--accl:#FFE2C2;--line:#F0DFC6;--ok:#2E9E5B;--bad:#D64545;--fs:clamp(13px,2.6vh,20px);
+--rh:calc((100vh - 22vh)/7);--rh:calc((100dvh - 22vh)/7)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:'Nunito',system-ui,sans-serif;font-weight:600;font-size:var(--fs)}
+.app{height:100vh;height:100dvh;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;gap:1vh;padding:1.2vh 2vw;overflow:hidden}
+.top{display:flex;align-items:center;gap:2vw}
+h1{font:800 clamp(16px,3.6vh,28px)/1.1 'Baloo 2',sans-serif;margin:0;white-space:nowrap}
+.cnt{margin-left:auto;font:800 var(--fs) 'Nunito',sans-serif;background:#fff;border:3px solid var(--line);border-radius:99px;padding:.4vh 14px}
+.tools{display:flex;gap:8px}
+.tb{min-height:max(40px,5vh);min-width:max(40px,5vh);padding:0 12px;border-radius:12px;border:3px solid var(--line);background:#fff;color:var(--ink);font:800 var(--fs) 'Nunito',sans-serif;cursor:pointer}
+.ins{margin:0;text-align:center;font-weight:800}
+.rows{min-height:0;display:grid;grid-template-rows:repeat(7,minmax(0,1fr));gap:.8vh}
+.row{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(0,.8fr) minmax(0,1.1fr) auto;gap:1.2vw;align-items:center;padding:0 1.2vw;background:#fff;border:3px solid var(--line);border-radius:14px;min-height:0}
+.row.done{background:#EAF7EF;border-color:var(--ok)}
+.row.no{animation:shake .4s}
+@keyframes shake{25%{translate:-6px 0}75%{translate:6px 0}}
+.oc{display:grid;grid-template-columns:repeat(5,auto);justify-content:start;align-content:center;gap:0 .5vw;font-size:min(calc(var(--rh)*.34),4.2vw);line-height:1.1}
+.oc button,.oc span{font-size:1em;line-height:1.1;border:0;background:none;padding:0;cursor:default}
+.oc button.rm{cursor:pointer}
+.ad{width:1.2em;height:1.2em;border:2px dashed #C9B79B !important;border-radius:50%;color:var(--accd);font-weight:800;cursor:pointer !important;background:#fff !important;font-size:.85em !important}
+.miss{border:3px dashed #C9B79B;border-radius:12px;background:#FFFBF3;min-height:calc(var(--rh)*.8);display:flex;align-items:center;padding:0 .6vw}
+.num{font:800 min(calc(var(--rh)*.55),9vw)/1 'Baloo 2',sans-serif;text-align:center;color:var(--accd)}
+.wd{font:800 min(calc(var(--rh)*.4),5.8vw)/1 'Baloo 2',sans-serif;text-align:center}
+button.cellb{width:100%;min-height:calc(var(--rh)*.8);border:3px dashed #C9B79B;border-radius:12px;background:#FFFBF3;color:inherit;cursor:pointer;font:inherit;padding:0}
+button.wordb{background:none;border:0;color:inherit;font:inherit;cursor:pointer;padding:0;width:100%}
+.ck{width:calc(var(--rh)*.72);height:calc(var(--rh)*.72);border-radius:50%;border:3px solid var(--accd);background:var(--acc);color:var(--ink);font:800 calc(var(--rh)*.4)/1 'Baloo 2',sans-serif;cursor:pointer;padding:0}
+.row.done .ck{background:var(--ok);border-color:#1F7A44;color:#fff;cursor:default}
+.msg{min-height:4.5vh;text-align:center;font-weight:800;font-size:clamp(15px,3vh,24px)}
+.msg.ok{color:#1F7A44}.msg.bad{color:#B83A3A}
+.bd{position:fixed;inset:0;background:rgba(43,26,14,.35);border:0;z-index:5}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:6;background:#fff;border-top:4px solid var(--accd);border-radius:20px 20px 0 0;padding:1.2vh 3vw 2vh}
+.sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:1vh;font:800 clamp(15px,3vh,24px) 'Baloo 2',sans-serif}
+.pad{display:grid;grid-template-columns:repeat(5,1fr);gap:1vh 1.2vw;max-width:70vh;margin:0 auto}
+.pad.w{grid-template-columns:repeat(4,1fr);max-width:96vw}
+.pad button{min-height:max(44px,6.5vh);border-radius:14px;border:3px solid var(--line);background:#fff;color:var(--ink);font:800 clamp(18px,3.6vh,30px) 'Baloo 2',sans-serif;cursor:pointer}
+.pad.w button{font-size:clamp(16px,3.2vh,26px)}
+.pad button:hover{background:var(--accl)}
+.pad .s2{grid-column:span 2}.pad .s3{grid-column:span 3;background:var(--acc);border-color:var(--accd)}
+.end{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2vh}
+.end .stars{font-size:min(10vh,12vw)}
+.end h2{font:800 clamp(24px,6vh,44px) 'Baloo 2',sans-serif;margin:0}
+.chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.chip{padding:.6vh 12px;border-radius:99px;background:var(--accl);font-weight:800}
+.chip.first{background:#DDF1E7}
+.big{min-height:max(48px,6vh);padding:0 28px;border-radius:16px;border:3px solid var(--accd);background:var(--acc);color:var(--ink);font:800 clamp(16px,3.2vh,24px) 'Baloo 2',sans-serif;cursor:pointer;box-shadow:0 4px 0 var(--accd)}
+button:focus-visible{outline:4px solid #345FA8;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.row.no{animation:none}}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+const W=['zero','one','two','three','four','five','six','seven','eight','nine','ten'];
+const OBJ=['🍎','🎈','🌸','🐟','🐞','🚗','🍌','🐱','🍓','😀'];
+const T={
+ vi:{title:'Điền cho khớp mỗi hàng',ins:'Nhìn từng hàng: đồ vật, chữ số, chữ. Điền ô còn thiếu cho khớp, rồi bấm ✓.',
+  empty:'Hãy điền ô còn thiếu trước nhé!',more:'Nhiều đồ vật quá! Bỏ bớt đi nhé.',less:'Chưa đủ đồ vật! Thêm nữa nhé.',wrong:'Chưa khớp. Nhìn lại cả hàng và thử nữa nhé!',
+  ok:n=>'Đúng rồi! '+W[n]+' = '+n,sh:{num:'Gõ chữ số',word:'Chọn chữ'},okb:'Xong',
+  fin:'Hoàn thành!',again:'Chơi lại',first:'đúng ngay lần đầu',retry:'đã thử lại',sound:'Âm thanh',lang:'EN',plate:'đĩa trống',close:'Đóng'},
+ en:{title:'Match each row',ins:'Look at each row: things, number, word. Fill in the missing box to match, then tap ✓.',
+  empty:'Fill in the missing box first!',more:'Too many things! Take some away.',less:'Not enough things! Add more.',wrong:'Not a match. Look at the whole row and try again!',
+  ok:n=>'Yes! '+W[n]+' = '+n,sh:{num:'Type the number',word:'Choose the word'},okb:'Done',
+  fin:'All done!',again:'Play again',first:'right first time',retry:'tried again',sound:'Sound',lang:'VI',plate:'empty plate',close:'Close'}
+};
+let lang='vi',muted=false,S;
+const $=document.getElementById('app');
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function say(t){if(muted)return;try{const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=.8;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+function log(r){try{const k='mathkids-log-match-each-row',a=JSON.parse(localStorage.getItem(k)||'[]');a.push(Object.assign({t:Date.now()},r));localStorage.setItem(k,JSON.stringify(a.slice(-500)))}catch(e){}}
+function reset(){
+ const nums=shuffle([0,1,2,3,4,5,6,7,8,9,10]).slice(0,7),em=shuffle(OBJ);
+ const kinds=shuffle(['obj','obj','num','num','word','word',['obj','num','word'][Math.floor(Math.random()*3)]]);
+ S={rows:nums.map((n,i)=>({n,kind:kinds[i],e:em[i],stamps:0,val:'',word:null,done:false,tries:0,shake:false})),sheet:null,msg:'',cls:'',fin:false};render()}
+function render(){
+ const t=T[lang],dn=S.rows.filter(r=>r.done).length;
+ let h=`<div class="top"><h1>${t.title}</h1><span class="cnt">${dn}/7</span><div class="tools"><button class="tb" data-a="snd" aria-pressed="${!muted}" aria-label="${t.sound}">${muted?'🔇':'🔊'}</button><button class="tb" data-a="lang">${t.lang}</button></div></div>`;
+ if(S.fin){
+  const ch=S.rows.slice().sort((a,b)=>a.n-b.n).map(r=>`<span class="chip ${r.tries?'':'first'}">${r.n} · ${r.tries?t.retry:t.first}</span>`).join('');
+  h+=`<p class="ins">&nbsp;</p><div class="end"><div class="stars">⭐⭐⭐⭐⭐</div><h2>${t.fin}</h2><div class="chips">${ch}</div><button class="big" data-a="again">${t.again}</button></div><div class="msg"></div>`;
+  $.innerHTML=h;return}
+ h+=`<p class="ins">${t.ins}</p><div class="rows">`;
+ S.rows.forEach((r,i)=>{
+  let oc;
+  if(r.kind==='obj'&&!r.done){
+   oc=`<div class="miss oc" style="display:grid">`+Array.from({length:r.stamps},(_,k)=>`<button class="rm" data-a="rm" data-i="${i}" aria-label="remove">${r.e}</button>`).join('')+(r.stamps<10?`<button class="ad" data-a="add" data-i="${i}" aria-label="add">＋</button>`:'')+`</div>`}
+  else{const c=r.n;oc=`<div class="oc" role="img" aria-label="${c}">${c===0?`<span title="${t.plate}">🍽️</span>`:Array.from({length:c},()=>`<span>${r.e}</span>`).join('')}</div>`}
+  let nc=(r.kind==='num'&&!r.done)?`<button class="cellb num" data-a="open" data-i="${i}" data-k="num">${r.val||'?'}</button>`:`<div class="num">${r.n}</div>`;
+  let wc=(r.kind==='word'&&!r.done)?`<button class="cellb wd" data-a="open" data-i="${i}" data-k="word">${r.word==null?'?':W[r.word]}</button>`:`<button class="wordb wd" data-a="hear" data-n="${r.n}">${W[r.n]}</button>`;
+  h+=`<div class="row ${r.done?'done':''} ${r.shake?'no':''}">${oc}${nc}${wc}<button class="ck" data-a="check" data-i="${i}" ${r.done?'disabled':''} aria-label="check">✓</button></div>`});
+ h+=`</div><div class="msg ${S.cls}" role="status" aria-live="polite">${S.msg}</div>`;
+ if(S.sheet){
+  const r=S.rows[S.sheet.i],k=S.sheet.kind;
+  h+=`<button class="bd" data-a="close" aria-label="${t.close}"></button><div class="sheet"><div class="sh"><span>${t.sh[k]}</span><button class="tb" data-a="close">✕</button></div>`;
+  h+=k==='num'?`<div class="pad">${[1,2,3,4,5,6,7,8,9,0].map(d=>`<button data-a="dg" data-k="${d}">${d}</button>`).join('')}<button class="s2" data-a="bk">⌫</button><button class="s3" data-a="close">${t.okb} ✓</button></div>`
+   :`<div class="pad w">${W.map((w,n)=>`<button data-a="wd" data-n="${n}">${w}</button>`).join('')}</div>`;
+  h+=`</div>`}
+ $.innerHTML=h;S.rows.forEach(r=>r.shake=false)}
+$.addEventListener('click',e=>{
+ const b=e.target.closest('[data-a]');if(!b||b.disabled)return;
+ const a=b.dataset.a,t=T[lang],r=S&&S.rows?S.rows[+b.dataset.i]:null;
+ if(a==='lang'){lang=lang==='vi'?'en':'vi';render();return}
+ if(a==='snd'){muted=!muted;if(muted)try{speechSynthesis.cancel()}catch(x){}render();return}
+ if(a==='again'){reset();return}
+ if(a==='hear'){say(W[+b.dataset.n]);return}
+ if(a==='close'){S.sheet=null;render();return}
+ if(a==='open'){S.sheet={i:+b.dataset.i,kind:b.dataset.k};render();return}
+ if(a==='dg'){const x=S.rows[S.sheet.i];if(x.val.length<2){x.val+=b.dataset.k;S.msg='';S.cls='';render()}return}
+ if(a==='bk'){const x=S.rows[S.sheet.i];x.val=x.val.slice(0,-1);render();return}
+ if(a==='wd'){const x=S.rows[S.sheet.i];x.word=+b.dataset.n;S.sheet=null;S.msg='';S.cls='';render();say(W[x.word]);return}
+ if(!r||r.done)return;
+ if(a==='add'&&r.stamps<10){r.stamps++;S.msg='';S.cls='';render();say(W[r.stamps]);return}
+ if(a==='rm'){r.stamps--;S.msg='';S.cls='';render();return}
+ if(a==='check'){
+  const n=r.n;
+  if((r.kind==='num'&&!r.val)||(r.kind==='word'&&r.word==null)){S.msg=t.empty;S.cls='bad';render();return}
+  const ok=r.kind==='obj'?r.stamps===n:r.kind==='num'?r.val===String(n):r.word===n;
+  if(ok){
+   r.done=true;S.msg=t.ok(n);S.cls='ok';log({n,missing:r.kind,ok:true,tries:r.tries+1});render();say(W[n]);
+   if(S.rows.every(x=>x.done))setTimeout(()=>{S.fin=true;render()},1500)}
+  else{
+   r.tries++;r.shake=true;S.cls='bad';
+   S.msg=r.kind==='obj'?(r.stamps>n?t.more:t.less):t.wrong;
+   log({n,missing:r.kind,ok:false,stamps:r.stamps,val:r.val,word:r.word});render();
+   if(r.kind!=='word')say(W[n])}
+ }});
+reset();
+</script>
+</body>
+</html>
