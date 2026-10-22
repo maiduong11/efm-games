@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Colour to make equal number – Carrots</title>
+<style>
+:root{--bg:#FBF3E6;--ink:#2B1A0E;--acc:#F27B21;--accd:#C4570A;--accl:#FFE2C2;--line:#F0DFC6;--ok:#2E9E5B;--bad:#D64545}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink);
+ font-family:'Baloo 2','Nunito',system-ui,sans-serif;font-weight:800}
+.app{height:100vh;height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:1.3vh;padding:1.3vh 3vw}
+.top{display:flex;align-items:center;gap:3vw}
+.tt{flex:1;min-width:0}
+h1{margin:0;font-size:clamp(16px,3.4vh,28px);line-height:1.15}
+.ins{margin:.2vh 0 0;font-size:clamp(12px,2.2vh,17px);font-weight:700}
+.stars{font-size:clamp(16px,3vh,24px);letter-spacing:2px;white-space:nowrap}
+.stage{--cw:min(7.6vw,9vh);display:grid;grid-template-columns:1fr auto 1.7fr;gap:2vw;align-items:stretch;min-height:0}
+.pn{background:#fff;border:4px solid var(--line);border-radius:22px;display:flex;flex-direction:column;align-items:center;
+ justify-content:center;gap:1vh;padding:1vh 1vw;min-height:0;overflow:hidden}
+.pn.no{animation:shake .4s}
+.pn.ok{background:#EAF7EF;border-color:var(--ok)}
+@keyframes shake{25%{translate:-8px 0}75%{translate:8px 0}}
+.who{font-size:min(9vh,12vw);line-height:1}
+.who.hop{animation:hop .5s 3}
+@keyframes hop{50%{translate:0 -14%}}
+.cs{display:grid;grid-template-columns:repeat(var(--c),auto);gap:.8vh 1vw;justify-content:center}
+.eq{align-self:center;font-size:min(9vh,11vw);color:var(--ok);opacity:0;transition:opacity .3s}
+.eq.on{opacity:1}
+.cr{display:block;width:var(--cw);height:calc(var(--cw)*2);overflow:visible}
+.cl,.cb{fill:#fff;stroke:#555;stroke-width:2;stroke-linejoin:round}
+.ln{stroke:#bbb;stroke-width:1.5;fill:none;stroke-linecap:round}
+.on .cl{fill:#3BA55C;stroke:#2A7A42}
+.on .cb{fill:#F27B21;stroke:#C4570A}
+.on .ln{stroke:#C4570A}
+.cbtn{background:none;border:0;padding:0;cursor:pointer;border-radius:10px}
+.cbtn.on svg{animation:pop .25s}
+@keyframes pop{50%{scale:1.2}}
+.fade{opacity:.25;pointer-events:none}
+.say{display:flex;align-items:center;gap:2vw;min-height:11vh}
+.av{font-size:min(10vh,14vw);line-height:1}
+.bub{flex:1;min-width:0;background:#fff;border:3px solid var(--line);border-radius:18px;padding:1vh 2vw;
+ display:flex;flex-wrap:wrap;gap:.4vh 1vw;align-items:center;font-size:clamp(15px,3.2vh,28px);min-height:8vh}
+.bub.bad{border-color:var(--bad);color:var(--bad)}
+.w{padding:0 .45em;border-radius:10px;color:#B7A98F}
+.w.said{color:var(--ink)}
+.w.on{background:var(--accl);color:var(--ink)}
+.rb,.nx,.ck{border-radius:50%;border:3px solid var(--accd);background:var(--acc);color:var(--ink);cursor:pointer;font:inherit;
+ width:max(52px,8vh);height:max(52px,8vh);font-size:clamp(20px,4vh,32px);box-shadow:0 4px 0 var(--accd);padding:0}
+.ck{background:var(--ok);border-color:#1F7A44;color:#fff;box-shadow:0 4px 0 #1F7A44}
+[hidden]{display:none!important}
+button:focus-visible{outline:4px solid #345FA8;outline-offset:2px}
+.end{grid-row:1/4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3vh;text-align:center}
+.end .st{font-size:min(12vh,14vw)}
+.end h2{margin:0;font-size:min(7vh,10vw)}
+.big{height:max(56px,9vh);padding:0 6vw;border-radius:20px;border:4px solid var(--accd);background:var(--acc);
+ color:var(--ink);font:inherit;font-size:min(5vh,7vw);cursor:pointer;box-shadow:0 5px 0 var(--accd)}
+@media (prefers-reduced-motion:reduce){.pn.no,.who.hop,.cbtn.on svg{animation:none}}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+const W=['zero','one','two','three','four','five','six','seven','eight','nine','ten'];
+const N=[3,4,2,5,6];
+const app=document.getElementById('app');
+let i=0,n,m,on,locked,words,spk=0;
+const rand=k=>Math.floor(Math.random()*k);
+const cap=s=>s[0].toUpperCase()+s.slice(1);
+function say(t){try{const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=.8;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+const carrot=()=>`<svg class="cr" viewBox="0 0 40 80"><path class="cl" d="M20 24 C14 14 10 8 12 2 C16 6 19 12 20 20 C21 12 24 6 28 2 C30 8 26 14 20 24Z"/><path class="cb" d="M10 24 Q20 18 30 24 Q27 54 20 78 Q13 54 10 24Z"/><path class="ln" d="M14 34h6M20 46h6M15 56h5"/></svg>`;
+
+function newRound(){
+ n=N[i];m=Math.min(10,n+2+rand(3));on=Array(m).fill(false);locked=false;
+ words=[cap(W[n]),'is equal to',W[n]+'.'];
+ const stars=N.map((_,k)=>k<i?'⭐':'☆').join('');
+ const left=Array.from({length:n},()=>`<div class="on">${carrot()}</div>`).join('');
+ const right=Array.from({length:m},(_,k)=>`<button class="cbtn" data-i="${k}" aria-label="carrot ${k+1}">${carrot()}</button>`).join('');
+ app.innerHTML=`<div class="top"><div class="tt"><h1>Colour to make equal number of carrots</h1><p class="ins">Tô màu cà rốt cho ngựa bằng số cà rốt của thỏ nhé!</p></div><div class="stars">${stars}</div></div>
+ <div class="stage"><div class="pn" id="pl"><span class="who" id="w1">🐰</span><div class="cs" style="--c:${Math.min(n,3)}">${left}</div></div>
+ <div class="eq" id="eq">=</div>
+ <div class="pn" id="pr"><span class="who" id="w2">🐴</span><div class="cs" style="--c:${Math.min(m,5)}">${right}</div></div></div>
+ <div class="say"><span class="av">🐰</span><div class="bub" id="bub">Đếm cà rốt của thỏ. Tô cà rốt cho ngựa bằng thỏ, rồi bấm ✓ nhé!</div>
+ <button class="ck" id="ck" aria-label="check">✓</button><button class="rb" id="rb" hidden aria-label="listen again">🔊</button><button class="nx" id="nx" hidden aria-label="next">➜</button></div>`;
+ document.getElementById('ck').onclick=check;
+ document.getElementById('rb').onclick=()=>speakSeq();
+ document.getElementById('nx').onclick=()=>{spk++;try{speechSynthesis.cancel()}catch(e){}i++;i>=N.length?end():newRound()};
+}
+function count(){return on.filter(Boolean).length}
+function bub(t,bad){const b=document.getElementById('bub');b.className='bub'+(bad?' bad':'');b.textContent=t}
+function wrong(t){
+ bub(t,true);
+ const p=document.getElementById('pr');p.classList.remove('no');void p.offsetWidth;p.classList.add('no');
+}
+function check(){
+ if(locked)return;
+ const c=count();
+ if(c===0)return wrong('Hãy tô cà rốt cho ngựa nhé!');
+ if(c>n)return wrong('Nhiều quá rồi! Bấm vào củ đã tô để bỏ bớt nhé.');
+ if(c<n)return wrong('Chưa đủ! Tô thêm cà rốt nhé.');
+ success();
+}
+function success(){
+ locked=true;
+ document.getElementById('pl').classList.add('ok');document.getElementById('pr').classList.add('ok');
+ document.getElementById('eq').classList.add('on');
+ document.getElementById('w1').classList.add('hop');document.getElementById('w2').classList.add('hop');
+ document.querySelectorAll('.cbtn:not(.on)').forEach(b=>b.classList.add('fade'));
+ document.getElementById('ck').hidden=true;document.getElementById('rb').hidden=false;
+ const b=document.getElementById('bub');b.className='bub';
+ b.innerHTML=words.map((t,k)=>`<span class="w" data-k="${k}">${t}</span>`).join('');
+ speakSeq();
+}
+function mark(idx){document.querySelectorAll('.w[data-k]').forEach(e=>{const k=+e.dataset.k;e.className='w'+(k<idx?' said':k===idx?' on':'')})}
+function speakSeq(){
+ const id=++spk;let k=0;
+ try{speechSynthesis.cancel()}catch(e){}
+ const next=()=>{
+  if(id!==spk)return;
+  if(k>=words.length){mark(99);document.getElementById('nx').hidden=false;return}
+  const idx=k++;mark(idx);let fired=false;
+  const go=()=>{if(fired)return;fired=true;setTimeout(next,150)};
+  try{const u=new SpeechSynthesisUtterance(words[idx].replace('.',''));u.lang='en-US';u.rate=.75;u.onend=go;u.onerror=go;speechSynthesis.speak(u)}catch(e){}
+  setTimeout(go,2200);
+ };
+ next();
+}
+function end(){
+ app.innerHTML=`<div class="end"><div class="st">🐰🥕🐴</div><h2>Giỏi quá! Great job!</h2><button class="big" id="again">Chơi lại</button></div>`;
+ document.getElementById('again').onclick=()=>{i=0;newRound()};
+}
+app.addEventListener('click',e=>{
+ const b=e.target.closest('.cbtn');if(!b||locked)return;
+ const k=+b.dataset.i;on[k]=!on[k];b.classList.toggle('on',on[k]);
+ if(on[k])say(W[count()]);
+ const bb=document.getElementById('bub');if(bb.classList.contains('bad'))bub('Đếm cà rốt của thỏ. Tô cà rốt cho ngựa bằng thỏ, rồi bấm ✓ nhé!');
+});
+newRound();
+</script>
+</body>
+</html>
