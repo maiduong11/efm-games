@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Count, colour the dots and write – Math Kids</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FBF3E6;--ink:#2B1A0E;--acc:#F27B21;--accl:#FFE2C2;--line:#F0DFC6;--ok:#2E9E5B;--bad:#D64545;--card:#fff}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Nunito',system-ui,sans-serif;font-weight:600}
+.wrap{max-width:760px;margin:0 auto;padding:12px 14px 40px}
+.top{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap}
+h1{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:clamp(20px,4.5vw,28px);margin:0}
+.tools{display:flex;gap:8px}
+.tb{min-height:44px;min-width:44px;padding:0 14px;border-radius:14px;border:3px solid var(--line);background:#fff;color:var(--ink);font:800 15px 'Nunito',sans-serif;cursor:pointer}
+.prog{display:flex;gap:6px;margin:10px 0}
+.pg{flex:1;height:12px;border-radius:99px;background:var(--line)}
+.pg.done{background:var(--ok)}.pg.now{background:var(--acc)}
+.card{background:var(--card);border:3px solid var(--line);border-radius:22px;padding:16px;margin-top:12px}
+.lab{font:800 18px 'Baloo 2',sans-serif;margin:0 0 8px}
+.objs{display:flex;flex-wrap:wrap;gap:6px 10px;justify-content:center;min-height:70px}
+.o{position:relative;font-size:clamp(34px,9vw,52px);line-height:1.1}
+.nb{display:none;position:absolute;right:-4px;top:-6px;min-width:22px;height:22px;border-radius:99px;background:var(--ink);color:#fff;font:800 14px 'Nunito',sans-serif;align-items:center;justify-content:center;padding:0 5px}
+.hint .nb{display:inline-flex;animation:pop .35s ease-out backwards;animation-delay:var(--d)}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.frame{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;max-width:420px;margin:0 auto}
+.dot{position:relative;aspect-ratio:1;border-radius:50%;border:4px solid #C9B79B;background:#fff;cursor:pointer;padding:0;font:800 18px 'Nunito',sans-serif;color:#fff}
+.dot.on{background:var(--acc);border-color:#C4570A}
+.dot[disabled]{cursor:default}
+.dot .nb{right:auto;left:50%;top:50%;transform:translate(-50%,-50%);background:transparent;font-size:20px;color:#fff}
+.dh .dot.on .nb{display:inline-flex}
+.act{display:flex;justify-content:center;margin-top:14px}
+.big{min-height:56px;padding:0 28px;border-radius:18px;border:3px solid #C4570A;background:var(--acc);color:var(--ink);font:800 22px 'Baloo 2',sans-serif;cursor:pointer;box-shadow:0 4px 0 #C4570A}
+.big[disabled]{opacity:.45;cursor:not-allowed}
+.pad{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;max-width:420px;margin:0 auto}
+.pad button{min-height:60px;border-radius:16px;border:3px solid var(--line);background:#fff;color:var(--ink);font:800 28px 'Baloo 2',sans-serif;cursor:pointer}
+.pad button:hover{background:var(--accl)}
+.msg{min-height:34px;margin-top:12px;text-align:center;font:800 18px 'Nunito',sans-serif}
+.msg.ok{color:#1F7A44}.msg.bad{color:#B83A3A}
+.end{text-align:center}.end .stars{font-size:48px;margin:6px 0}
+.chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.chip{padding:6px 12px;border-radius:99px;background:var(--accl);font-weight:800}
+.chip.first{background:#DDF1E7}
+button:focus-visible{outline:4px solid #345FA8;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.hint .nb{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+const NUMS=[6,7,8,9,10], W=['zero','one','two','three','four','five','six','seven','eight','nine','ten'];
+const TY=[{e:'🎈',en:'balloons',vi:'quả bóng bay'},{e:'⭐',en:'stars',vi:'ngôi sao'},{e:'🌸',en:'flowers',vi:'bông hoa'},{e:'🐟',en:'fish',vi:'con cá'},{e:'🍎',en:'apples',vi:'quả táo'},{e:'🐞',en:'ladybugs',vi:'con bọ rùa'}];
+const T={
+ vi:{title:'Đếm, tô màu các chấm và viết số',count:'Đếm',colour:'Tô màu các chấm',write:'Viết số',
+  c1:(t)=>'Đếm số '+t.vi+', rồi bấm tô màu bấy nhiêu chấm.',check:'Kiểm tra ✓',
+  w1:'Tuyệt! Em đã tô đúng số chấm. Giờ hãy chọn số.',cWrong:'Chưa đúng. Đếm lại từng '+'đồ vật cùng cô nhé!',
+  ok:(n)=>'Đúng rồi! '+W[n]+' = '+n,nWrong:'Chưa đúng. Đếm lại các chấm đã tô nhé!',
+  done:'Hoàn thành!',again:'Chơi lại',first:'đúng ngay lần đầu',retry:'đã thử lại',sound:'Âm thanh',lang:'EN'},
+ en:{title:'Count, colour the dots and write',count:'Count',colour:'Colour the dots',write:'Write the number',
+  c1:(t)=>'Count the '+t.en+'. Then colour that many dots.',check:'Check ✓',
+  w1:'Great! You coloured the right dots. Now choose the number.',cWrong:'Not yet. Let’s count together!',
+  ok:(n)=>'Yes! '+W[n]+' = '+n,nWrong:'Not yet. Count the coloured dots again!',
+  done:'All done!',again:'Play again',first:'right first time',retry:'tried again',sound:'Sound',lang:'VI'}
+};
+let lang='vi',muted=false,S;
+const $=document.getElementById('app');
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function say(t){if(muted)return;try{const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=.8;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+function log(r){try{const k='mathkids-log-colour-dots',a=JSON.parse(localStorage.getItem(k)||'[]');a.push(Object.assign({t:Date.now()},r));localStorage.setItem(k,JSON.stringify(a.slice(-500)))}catch(e){}}
+function reset(){S={order:shuffle(NUMS),types:shuffle(TY).slice(0,5),i:0,on:new Set(),stage:'colour',cTry:0,wTry:0,res:[],hint:false,dh:false,msg:'',cls:'',lock:false};render()}
+function nextRound(){S.res.push({n:S.order[S.i],retry:S.cTry+S.wTry>0});S.i++;
+ if(S.i>=5){S.stage='done'}else{S.on=new Set();S.stage='colour';S.cTry=0;S.wTry=0;S.hint=false;S.dh=false;S.msg='';S.cls='';S.lock=false}
+ render()}
+function render(){
+ const t=T[lang];
+ let h=`<div class="top"><h1>${t.title}</h1><div class="tools"><button class="tb" data-a="snd" aria-pressed="${!muted}" aria-label="${t.sound}">${muted?'🔇':'🔊'}</button><button class="tb" data-a="lang">${t.lang}</button></div></div>`;
+ h+='<div class="prog" aria-hidden="true">'+[0,1,2,3,4].map(k=>`<div class="pg ${S.stage==='done'||k<S.i?'done':k===S.i?'now':''}"></div>`).join('')+'</div>';
+ if(S.stage==='done'){
+  h+=`<div class="card end"><div class="stars">⭐⭐⭐⭐⭐</div><h2 class="lab" style="font-size:28px">${t.done}</h2><div class="chips">${S.res.map(r=>`<span class="chip ${r.retry?'':'first'}">${r.n} · ${r.retry?t.retry:t.first}</span>`).join('')}</div><button class="big" data-a="again">${t.again}</button></div>`;
+  $.innerHTML=h;return}
+ const n=S.order[S.i],ty=S.types[S.i];
+ h+=`<div class="card"><p class="lab">1. ${t.count}</p><div class="objs ${S.hint?'hint':''}" role="img" aria-label="${n} ${ty.en}">${Array.from({length:n},(_,k)=>`<span class="o" style="--d:${(k*.3).toFixed(1)}s">${ty.e}<b class="nb">${k+1}</b></span>`).join('')}</div><p style="margin:10px 0 0;text-align:center">${t.c1(ty)}</p></div>`;
+ const wr=S.stage==='write';
+ h+=`<div class="card"><p class="lab">2. ${t.colour}</p><div class="frame ${S.dh?'dh':''}">${Array.from({length:10},(_,k)=>`<button class="dot ${S.on.has(k)?'on':''}" data-a="dot" data-k="${k}" aria-pressed="${S.on.has(k)}" aria-label="${k+1}" ${wr||S.lock?'disabled':''}><b class="nb">${[...S.on].sort((a,b)=>a-b).indexOf(k)+1}</b></button>`).join('')}</div>`;
+ if(!wr)h+=`<div class="act"><button class="big" data-a="check" ${S.on.size?'':'disabled'}>${t.check}</button></div>`;
+ h+='</div>';
+ if(wr)h+=`<div class="card"><p class="lab">3. ${t.write}</p><div class="pad">${Array.from({length:10},(_,k)=>`<button data-a="num" data-k="${k+1}" ${S.lock?'disabled':''}>${k+1}</button>`).join('')}</div></div>`;
+ h+=`<div class="msg ${S.cls}" role="status" aria-live="polite">${S.msg}</div>`;
+ $.innerHTML=h}
+$.addEventListener('click',e=>{
+ const b=e.target.closest('[data-a]');if(!b||b.disabled)return;
+ const a=b.dataset.a,t=T[lang];
+ if(a==='lang'){lang=lang==='vi'?'en':'vi';render();return}
+ if(a==='snd'){muted=!muted;if(muted)try{speechSynthesis.cancel()}catch(e){}render();return}
+ if(a==='again'){reset();return}
+ if(S.lock||S.stage==='done')return;
+ const n=S.order[S.i];
+ if(a==='dot'&&S.stage==='colour'){const k=+b.dataset.k;S.on.has(k)?S.on.delete(k):S.on.add(k);S.msg='';S.cls='';render();say(W[S.on.size]);return}
+ if(a==='check'&&S.stage==='colour'){
+  if(S.on.size===n){S.stage='write';S.hint=false;S.msg=t.w1;S.cls='ok';log({n,step:'colour',ok:true,tries:S.cTry+1});render();say(lang==='en'?'Great! Now choose the number.':'Great!')}
+  else{S.cTry++;S.hint=true;S.msg=t.cWrong;S.cls='bad';log({n,step:'colour',ok:false,coloured:S.on.size});render();say(W.slice(1,n+1).join(', '))}
+  return}
+ if(a==='num'&&S.stage==='write'){
+  const k=+b.dataset.k;
+  if(k===n){S.msg=t.ok(n);S.cls='ok';S.lock=true;log({n,step:'write',ok:true,tries:S.wTry+1});render();say(W[n]);setTimeout(nextRound,1800)}
+  else{S.wTry++;S.dh=true;S.msg=t.nWrong;S.cls='bad';log({n,step:'write',ok:false,chosen:k});render();say(W.slice(1,n+1).join(', '))}
+ }});
+reset();
+</script>
+</body>
+</html>

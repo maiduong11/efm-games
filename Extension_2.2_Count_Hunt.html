@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Count Hunt – Count, colour the dots and write – Math Kids</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FBF3E6;--ink:#2B1A0E;--acc:#F27B21;--accd:#C4570A;--accl:#FFE2C2;--line:#F0DFC6;--ok:#2E9E5B;--bad:#D64545;
+--ds:min(9.5vh,6.5vw);--pb:min(7.5vh,5.5vw);--em:min(9.5vh,6.5vw);--fs:clamp(13px,2.6vh,20px)}
+@media (max-aspect-ratio:1/1){:root{--ds:min(7.5vh,14vw);--pb:min(6vh,12vw);--em:min(6.5vh,12vw)}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:'Nunito',system-ui,sans-serif;font-weight:600;font-size:var(--fs)}
+.app{height:100vh;height:100dvh;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;gap:1vh;padding:1.2vh 2vw;overflow:hidden}
+@media (max-height:460px){.app{height:auto;min-height:100dvh;overflow:visible}}
+.top{display:flex;align-items:center;gap:2vw}
+h1{font:800 clamp(16px,3.6vh,28px)/1.1 'Baloo 2',sans-serif;margin:0;white-space:nowrap}
+.prog{flex:1;display:flex;gap:6px;max-width:30vw;margin-left:auto}
+.pg{flex:1;height:1.4vh;min-height:8px;border-radius:99px;background:var(--line)}
+.pg.done{background:var(--ok)}.pg.now{background:var(--acc)}
+.tools{display:flex;gap:8px}
+.tb{min-height:max(40px,5vh);min-width:max(40px,5vh);padding:0 12px;border-radius:12px;border:3px solid var(--line);background:#fff;color:var(--ink);font:800 var(--fs) 'Nunito',sans-serif;cursor:pointer}
+.tb[disabled]{opacity:.45;cursor:not-allowed}
+.ins{margin:0;text-align:center;font-weight:800}
+.main{min-height:0;display:grid;grid-template-columns:1.1fr 1fr;gap:1.5vw}
+@media (max-aspect-ratio:1/1){.main{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto}}
+.card{min-height:0;display:flex;flex-direction:column;background:#fff;border:3px solid var(--line);border-radius:20px;padding:1.2vh 1.5vw}
+.lab{font:800 clamp(14px,2.8vh,22px) 'Baloo 2',sans-serif;margin:0 0 .6vh}
+.tank{flex:1;min-height:0;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(3,1fr);background:linear-gradient(#E4F4FA,#CDEAF3);border-radius:14px;padding:1vh 1vw}
+.it{grid-column:var(--c);grid-row:var(--r);justify-self:center;align-self:center;position:relative;border:0;background:none;padding:0;font-size:var(--em);line-height:1.1;cursor:pointer;transform:rotate(var(--rot))}
+.it[disabled]{cursor:default}
+.it.got{filter:saturate(.5);opacity:.75}
+.it.got::after{content:'✓';position:absolute;right:-6px;top:-8px;width:1.1em;height:1.1em;border-radius:50%;background:var(--ok);color:#fff;font:800 clamp(13px,3vh,22px)/1.1em 'Nunito',sans-serif;text-align:center}
+.it.no{animation:shake .4s}
+.it.pulse{animation:pulse .7s ease-in-out 3}
+@keyframes shake{25%{translate:-6px 0}75%{translate:6px 0}}
+@keyframes pulse{50%{scale:1.3}}
+.frame{display:grid;grid-template-columns:repeat(5,var(--ds));gap:1vh 1.2vw;justify-content:center}
+.dot{position:relative;width:var(--ds);height:var(--ds);border-radius:50%;border:4px solid #C9B79B;background:#fff;display:flex;align-items:center;justify-content:center;color:#fff;font:800 clamp(14px,3vh,24px) 'Nunito',sans-serif}
+.dot.on{background:var(--acc);border-color:var(--accd)}
+.act{display:flex;justify-content:center;margin:.8vh 0}
+.big{min-height:calc(var(--pb)*1.05);padding:0 24px;border-radius:16px;border:3px solid var(--accd);background:var(--acc);color:var(--ink);font:800 clamp(16px,3.2vh,24px) 'Baloo 2',sans-serif;cursor:pointer;box-shadow:0 4px 0 var(--accd)}
+.big[disabled]{opacity:.45;cursor:not-allowed}
+.ent{display:flex;gap:1vw;align-items:center;margin-bottom:.8vh}
+.box{flex:1;height:var(--pb);display:flex;align-items:center;justify-content:center;border:3px dashed #C9B79B;border-radius:14px;background:#fff;font:800 calc(var(--pb)*.8)/1 'Baloo 2',sans-serif;letter-spacing:.1em}
+.box.ph{color:#C9B79B}
+.pad{display:grid;grid-template-columns:repeat(5,1fr);gap:.8vh 1vw;max-width:62vh;margin:0 auto;width:100%}
+.off{opacity:.4;pointer-events:none}
+.pad button{height:var(--pb);border-radius:14px;border:3px solid var(--line);background:#fff;color:var(--ink);font:800 clamp(18px,3.6vh,30px) 'Baloo 2',sans-serif;cursor:pointer;padding:0}
+.pad button:hover{background:var(--accl)}
+.msg{min-height:4.5vh;text-align:center;font-weight:800;font-size:clamp(15px,3vh,24px)}
+.msg.ok{color:#1F7A44}.msg.bad{color:#B83A3A}
+.end{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2vh}
+.end .stars{font-size:min(10vh,12vw)}
+.end h2{font:800 clamp(24px,6vh,44px) 'Baloo 2',sans-serif;margin:0}
+.chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.chip{padding:.6vh 12px;border-radius:99px;background:var(--accl);font-weight:800}
+.chip.first{background:#DDF1E7}
+button:focus-visible{outline:4px solid #345FA8;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.it.no,.it.pulse{animation:none}}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+const NUMS=[6,7,8,9,10], W=['zero','one','two','three','four','five','six','seven','eight','nine','ten'];
+const TY=[{e:'🎈',en:'balloons',vi:'quả bóng bay'},{e:'⭐',en:'stars',vi:'ngôi sao'},{e:'🌸',en:'flowers',vi:'bông hoa'},{e:'🐟',en:'fish',vi:'con cá'},{e:'🍎',en:'apples',vi:'quả táo'},{e:'🐞',en:'ladybugs',vi:'con bọ rùa'}];
+const T={
+ vi:{title:'Đếm, tô màu và viết số',count:'Đếm trong khung',colour:'Chấm tô màu',write:'Viết số',
+  c1:t=>'Chạm vào từng '+t.vi+' để đếm. Mỗi lần đếm, một chấm được tô màu.',done:'Đếm xong ✓',
+  only:t=>'Chỉ đếm '+t.vi+' thôi nhé!',more:t=>'Còn '+t.vi+' chưa đếm. Tìm tiếp nhé!',
+  w1:'Giỏi! Giờ hãy gõ số em đã đếm được.',wrong:'Chưa đúng. Đếm các chấm đã tô nhé!',ok:n=>'Đúng rồi! '+W[n]+' = '+n,
+  fin:'Hoàn thành!',again:'Chơi lại',first:'đúng ngay lần đầu',retry:'đã thử lại',sound:'Âm thanh',lang:'EN',del:'Xóa'},
+ en:{title:'Count, colour and write',count:'Count in the box',colour:'Coloured dots',write:'Write the number',
+  c1:t=>'Tap each of the '+t.en+' to count. Each tap colours one dot.',done:'Done counting ✓',
+  only:t=>'Only count the '+t.en+'!',more:t=>'Some '+t.en+' are not counted yet. Keep looking!',
+  w1:'Great! Now type the number you counted.',wrong:'Not yet. Count the coloured dots again!',ok:n=>'Yes! '+W[n]+' = '+n,
+  fin:'All done!',again:'Play again',first:'right first time',retry:'tried again',sound:'Sound',lang:'VI',del:'Delete'}
+};
+let lang='vi',muted=false,S;
+const $=document.getElementById('app');
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function say(t){if(muted)return;try{const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=.8;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+function log(r){try{const k='mathkids-log-count-hunt',a=JSON.parse(localStorage.getItem(k)||'[]');a.push(Object.assign({t:Date.now()},r));localStorage.setItem(k,JSON.stringify(a.slice(-500)))}catch(e){}}
+function round(i){
+ const n=S.order[i],ty=S.types[i],oth=shuffle(TY.filter(x=>x!==ty)).slice(0,2);
+ const arr=[];for(let k=0;k<n;k++)arr.push({e:ty.e,t:1,got:0});
+ for(let k=0;k<3;k++)arr.push({e:oth[k%2].e,t:0,got:0});
+ const cells=shuffle([...Array(15).keys()]);
+ return {items:shuffle(arr).map((x,k)=>Object.assign(x,{c:cells[k]%5+1,r:Math.floor(cells[k]/5)+1,rot:Math.round(Math.random()*24-12)})),stage:'count',ans:'',cTry:0,wTry:0,hint:false,dh:false,msg:'',cls:'',lock:false,shake:-1}}
+function reset(){S={order:shuffle(NUMS),types:shuffle(TY).slice(0,5),i:0,res:[]};Object.assign(S,round(0));render()}
+function next(){S.res.push({n:S.order[S.i],retry:S.cTry+S.wTry>0});S.i++;if(S.i>=5)S.stage='done';else Object.assign(S,round(S.i));render()}
+function render(){
+ const t=T[lang],fin=S.stage==='done';
+ let h=`<div class="top"><h1>${t.title}</h1><div class="prog" aria-hidden="true">${[0,1,2,3,4].map(k=>`<div class="pg ${fin||k<S.i?'done':k===S.i?'now':''}"></div>`).join('')}</div><div class="tools"><button class="tb" data-a="snd" aria-pressed="${!muted}" aria-label="${t.sound}">${muted?'🔇':'🔊'}</button><button class="tb" data-a="lang">${t.lang}</button></div></div>`;
+ if(fin){
+  h+=`<p class="ins">&nbsp;</p><div class="end"><div class="stars">⭐⭐⭐⭐⭐</div><h2>${t.fin}</h2><div class="chips">${S.res.map(r=>`<span class="chip ${r.retry?'':'first'}">${r.n} · ${r.retry?t.retry:t.first}</span>`).join('')}</div><button class="big" data-a="again">${t.again}</button></div><div class="msg"></div>`;
+  $.innerHTML=h;return}
+ const n=S.order[S.i],ty=S.types[S.i],wr=S.stage==='write',cnt=S.items.filter(x=>x.t&&x.got).length;
+ h+=`<p class="ins">${t.c1(ty)}</p><div class="main">`;
+ h+=`<div class="card"><p class="lab">1. ${t.count}</p><div class="tank">${S.items.map((x,k)=>`<button class="it ${x.got?'got':''} ${S.shake===k?'no':''} ${S.hint&&x.t&&!x.got?'pulse':''}" style="--c:${x.c};--r:${x.r};--rot:${x.rot}deg" data-a="it" data-k="${k}" aria-label="${x.e}" ${wr||x.got||S.lock?'disabled':''}>${x.e}</button>`).join('')}</div></div>`;
+ h+=`<div class="card"><p class="lab">2. ${t.colour}</p><div class="frame" aria-label="${cnt}">${Array.from({length:10},(_,k)=>`<div class="dot ${k<cnt?'on':''}">${S.dh&&k<cnt?k+1:''}</div>`).join('')}</div>`;
+ h+=`<div class="act"><button class="big" data-a="done" ${wr||!cnt?'disabled':''}>${wr?'✓':t.done}</button></div>`;
+ h+=`<p class="lab">3. ${t.write}</p><div class="${wr?'':'off'}"><div class="ent"><div class="box ${S.ans?'':'ph'}" aria-live="polite">${S.ans||'?'}</div><button class="tb" data-a="del" ${S.ans?'':'disabled'}>⌫</button><button class="big" data-a="ok" ${S.ans&&!S.lock?'':'disabled'}>OK ✓</button></div>`;
+ h+=`<div class="pad">${[1,2,3,4,5,6,7,8,9,0].map(d=>`<button data-a="dg" data-k="${d}" ${S.lock?'disabled':''}>${d}</button>`).join('')}</div></div></div></div>`;
+ h+=`<div class="msg ${S.cls}" role="status" aria-live="polite">${S.msg}</div>`;
+ $.innerHTML=h}
+$.addEventListener('click',e=>{
+ const b=e.target.closest('[data-a]');if(!b||b.disabled)return;
+ const a=b.dataset.a,t=T[lang];
+ if(a==='lang'){lang=lang==='vi'?'en':'vi';render();return}
+ if(a==='snd'){muted=!muted;if(muted)try{speechSynthesis.cancel()}catch(x){}render();return}
+ if(a==='again'){reset();return}
+ if(S.lock||S.stage==='done')return;
+ const n=S.order[S.i],ty=S.types[S.i],cnt=()=>S.items.filter(x=>x.t&&x.got).length;
+ if(a==='it'&&S.stage==='count'){
+  const k=+b.dataset.k,x=S.items[k];
+  if(x.t){x.got=1;S.msg='';S.cls='';S.hint=false;render();say(W[cnt()])}
+  else{S.msg=t.only(ty);S.cls='bad';S.shake=k;render();S.shake=-1}
+  return}
+ if(a==='done'&&S.stage==='count'){
+  if(cnt()===n){S.stage='write';S.hint=false;S.msg=t.w1;S.cls='ok';log({n,step:'count',ok:true,tries:S.cTry+1});render()}
+  else{S.cTry++;S.hint=true;S.msg=t.more(ty);S.cls='bad';log({n,step:'count',ok:false,counted:cnt()});render()}
+  return}
+ if(S.stage!=='write')return;
+ if(a==='dg'&&S.ans.length<2){S.ans+=b.dataset.k;S.msg='';S.cls='';render();return}
+ if(a==='del'){S.ans=S.ans.slice(0,-1);render();return}
+ if(a==='ok'&&S.ans){
+  if(+S.ans===n){S.msg=t.ok(n);S.cls='ok';S.lock=true;log({n,step:'write',ok:true,tries:S.wTry+1});render();say(W[n]);setTimeout(next,1700)}
+  else{S.wTry++;S.dh=true;S.msg=t.wrong;S.cls='bad';log({n,step:'write',ok:false,typed:S.ans});S.ans='';render();say(W.slice(1,n+1).join(', '))}
+ }});
+document.addEventListener('keydown',e=>{
+ if(!S||S.stage!=='write'||S.lock)return;
+ if(/^[0-9]$/.test(e.key)&&S.ans.length<2){S.ans+=e.key;render()}
+ else if(e.key==='Backspace'){S.ans=S.ans.slice(0,-1);render()}
+ else if(e.key==='Enter'&&S.ans){const b=$.querySelector('[data-a=ok]');if(b)b.click()}});
+reset();
+</script>
+</body>
+</html>
