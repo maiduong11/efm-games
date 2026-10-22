@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Match each row – Math Kids</title>
+<style>
+:root{--bg:#FBF3E6;--ink:#2B1A0E;--acc:#F27B21;--accd:#C4570A;--accl:#FFE2C2;--line:#F0DFC6;--ok:#2E9E5B;
+ --rh:calc((100vh - 15vh)/6);--rh:calc((100dvh - 15vh)/6)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink);
+ font-family:'Baloo 2','Nunito','Arial Rounded MT Bold',system-ui,sans-serif;font-weight:800}
+.app{height:100vh;height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr);gap:1vh;padding:1.2vh 2.5vw}
+.top{display:flex;align-items:center;gap:2vw}
+.tt{flex:1;min-width:0}
+h1{margin:0;font-size:clamp(16px,3.4vh,26px);line-height:1.1}
+.ins{margin:.2vh 0 0;font-size:clamp(12px,2.2vh,17px);font-weight:700}
+.cnt{background:#fff;border:3px solid var(--line);border-radius:99px;padding:.3vh 14px;font-size:clamp(14px,2.6vh,20px)}
+.rows{min-height:0;display:grid;grid-template-rows:repeat(6,minmax(0,1fr));gap:.8vh}
+.row{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:1.5vw;min-height:0}
+.cell{position:relative;min-height:0;background:#fff;border:3px solid var(--line);border-radius:14px;overflow:hidden}
+.row.done .cell{background:#EAF7EF;border-color:var(--ok)}
+.l{display:flex;align-items:center;flex-wrap:wrap;align-content:center;gap:.15em .3em;padding:0 1.2vw;
+ font-size:min(calc(var(--rh)*.4),4.3vw);line-height:1}
+.l span,.l button{font-size:1em;line-height:1}
+.sh{display:inline-block;width:.85em;height:.85em;border:0;padding:0;vertical-align:middle}
+.circle{border-radius:50%;background:#E85D5D}
+.square{background:#3C7DD9}
+.triangle{background:#2E9E5B;clip-path:polygon(50% 0,100% 100%,0 100%)}
+button.rm{cursor:pointer;outline:3px solid #fff;outline-offset:-3px;filter:brightness(1.1)}
+.ad{width:1em;height:1em;border:3px dashed #C9B79B;border-radius:50%;background:#FFFBF3;color:var(--accd);
+ font:800 .75em/1 inherit;cursor:pointer;padding:0}
+.num{display:flex;align-items:center;justify-content:center;font-size:min(calc(var(--rh)*.75),12vw);line-height:1;color:var(--accd)}
+canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.er{position:absolute;right:6px;top:6px;width:32px;height:32px;border-radius:50%;border:2px solid var(--line);
+ background:#fff;color:var(--ink);font-size:16px;cursor:pointer;padding:0;z-index:2}
+button:focus-visible{outline:4px solid #345FA8;outline-offset:2px}
+.end{grid-row:1/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3vh;text-align:center}
+.end .st{font-size:min(12vh,14vw)}
+.end h2{margin:0;font-size:min(7vh,10vw)}
+.big{height:max(56px,9vh);padding:0 6vw;border-radius:20px;border:4px solid var(--accd);background:var(--acc);
+ color:var(--ink);font:inherit;font-size:min(5vh,7vw);cursor:pointer;box-shadow:0 5px 0 var(--accd)}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+const W=['zero','one','two','three','four','five','six','seven','eight','nine','ten'];
+const ROWS=[
+ {t:'trace',n:4,k:'🐰'},
+ {t:'draw',n:6,s:'circle',g:1},
+ {t:'draw',n:4,s:'square',g:3},
+ {t:'trace',n:7,k:'🪲'},
+ {t:'trace',n:9,k:'🍬'},
+ {t:'draw',n:10,s:'triangle',g:2}
+];
+const app=document.getElementById('app');
+let S;
+function say(t){try{const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=.8;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+
+function leftHtml(r){
+ if(r.t==='trace')return Array.from({length:r.n},()=>`<span>${r.k}</span>`).join('');
+ let h='';
+ for(let k=0;k<r.g;k++)h+=`<span class="sh ${r.s}"></span>`;
+ for(let k=0;k<r.add;k++)h+=r.done?`<span class="sh ${r.s}"></span>`:`<button class="sh ${r.s} rm" data-a="rm" aria-label="remove"></button>`;
+ if(!r.done&&r.g+r.add<10)h+=`<button class="ad" data-a="add" aria-label="draw one more">＋</button>`;
+ return h;
+}
+function build(){
+ let h=`<div class="top"><div class="tt"><h1>Match each row</h1><p class="ins">Look and write or draw to match each row.</p></div><span class="cnt" id="cnt">0/6</span></div><div class="rows">`;
+ S.forEach((r,i)=>{
+  h+=`<div class="row" id="row${i}"><div class="cell l" id="l${i}">${leftHtml(r)}</div>`;
+  h+=r.t==='trace'
+   ?`<div class="cell" id="r${i}"><canvas class="gh"></canvas><canvas class="ink"></canvas><button class="er" data-a="er" data-i="${i}" aria-label="erase">↺</button></div>`
+   :`<div class="cell num">${r.n}</div>`;
+  h+=`</div>`});
+ h+=`</div>`;app.innerHTML=h;
+ S.forEach((r,i)=>{if(r.done)document.getElementById('row'+i).classList.add('done')});
+ updCnt();setupCanvases();
+}
+function updCnt(){const c=document.getElementById('cnt');if(c)c.textContent=S.filter(r=>r.done).length+'/6'}
+
+function setupCanvases(){
+ const dpr=window.devicePixelRatio||1;
+ S.forEach((r,i)=>{
+  if(r.t!=='trace')return;
+  const wrap=document.getElementById('r'+i);if(!wrap)return;
+  const w=wrap.clientWidth,h=wrap.clientHeight;
+  const gh=wrap.querySelector('.gh'),ink=wrap.querySelector('.ink');
+  [gh,ink].forEach(c=>{c.width=Math.round(w*dpr);c.height=Math.round(h*dpr)});
+  const g=gh.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);
+  g.font=`800 ${h*.8}px 'Arial Rounded MT Bold',Arial,sans-serif`;g.textAlign='center';g.textBaseline='middle';
+  g.fillStyle=r.done?'#2E9E5B':'#DCCFB9';g.fillText(String(r.n),w/2,h*.54);
+  const k=ink.getContext('2d');k.setTransform(dpr,0,0,dpr,0,0);
+  k.lineCap='round';k.lineJoin='round';k.lineWidth=h*.11;k.strokeStyle='#F27B21';
+  if(!r.done)bindInk(ink,i,k);
+ });
+}
+function bindInk(c,i,k){
+ let on=false,lx=0,ly=0;
+ const pos=e=>{const b=c.getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top]};
+ c.onpointerdown=e=>{if(S[i].done)return;on=true;c.setPointerCapture(e.pointerId);[lx,ly]=pos(e);k.beginPath();k.moveTo(lx,ly);k.lineTo(lx+.01,ly);k.stroke()};
+ c.onpointermove=e=>{if(!on)return;const[x,y]=pos(e);k.beginPath();k.moveTo(lx,ly);k.lineTo(x,y);k.stroke();lx=x;ly=y};
+ c.onpointerup=c.onpointercancel=()=>{if(!on)return;on=false;evaluate(i)};
+}
+function evaluate(i){
+ const r=S[i];if(r.done)return;
+ const wrap=document.getElementById('r'+i);
+ const gh=wrap.querySelector('.gh'),ink=wrap.querySelector('.ink');
+ const a=gh.getContext('2d').getImageData(0,0,gh.width,gh.height).data;
+ const b=ink.getContext('2d').getImageData(0,0,ink.width,ink.height).data;
+ let m=0,cv=0,out=0;
+ for(let p=3;p<a.length;p+=4){const M=a[p]>128,I=b[p]>128;if(M){m++;if(I)cv++}else if(I)out++}
+ if(m&&cv/m>=.6&&out/m<=.6)finish(i);
+}
+function finish(i){
+ const r=S[i];r.done=true;
+ document.getElementById('row'+i).classList.add('done');
+ document.getElementById('l'+i).innerHTML=leftHtml(r);
+ if(r.t==='trace')setupCanvases();
+ updCnt();say(W[r.n]);
+ if(S.every(x=>x.done))setTimeout(end,1500);
+}
+function end(){
+ app.innerHTML=`<div class="end"><div class="st">⭐⭐⭐⭐⭐</div><h2>All done!</h2><button class="big" data-a="again">Play again</button></div>`;
+}
+function reset(){S=ROWS.map(r=>Object.assign({add:0,done:false},r));build()}
+
+app.addEventListener('click',e=>{
+ const b=e.target.closest('[data-a]');if(!b)return;
+ const a=b.dataset.a;
+ if(a==='again'){reset();return}
+ if(a==='er'){const i=+b.dataset.i,ink=document.querySelector('#r'+i+' .ink');ink.getContext('2d').clearRect(0,0,ink.width,ink.height);return}
+ const row=b.closest('.row');if(!row)return;
+ const i=+row.id.slice(3),r=S[i];if(r.done)return;
+ if(a==='add'){r.add++;say(W[Math.min(r.g+r.add,10)])}
+ if(a==='rm'){r.add--}
+ document.getElementById('l'+i).innerHTML=leftHtml(r);
+ if(r.g+r.add===r.n)finish(i);
+});
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{if(app.querySelector('.rows'))setupCanvases()},150)});
+reset();
+</script>
+</body>
+</html>
