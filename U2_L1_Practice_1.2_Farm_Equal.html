@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Colour to make equal number – Carrots</title>
+    <style>
+        :root {
+            --bg: #FBF3E6;
+            --ink: #2B1A0E;
+            --acc: #F27B21;
+            --accd: #C4570A;
+            --accl: #FFE2C2;
+            --line: #F0DFC6;
+            --ok: #2E9E5B;
+            --bad: #D64545
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Baloo 2', 'Nunito', system-ui, sans-serif;
+            font-weight: 800
+        }
+
+        body.emb {
+            background: transparent
+        }
+
+        /* ===== THẺ NGOÀI (giống thẻ hoạt động của website) ===== */
+        .page {
+            height: 100%;
+            padding: 1.6vh 2vw
+        }
+
+        .card {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.4vh;
+            background: #fff;
+            border: 2px solid var(--line);
+            border-radius: 28px;
+            padding: 1.8vh 2vw
+        }
+
+        .hd {
+            display: flex;
+            align-items: center;
+            gap: 2vw
+        }
+
+        .tt {
+            flex: 1;
+            min-width: 0
+        }
+
+        h2 {
+            margin: 0;
+            font-size: clamp(18px, 3.8vh, 30px);
+            line-height: 1.15
+        }
+
+        .ins {
+            margin: .3vh 0 0;
+            font-size: clamp(12px, 2.4vh, 16px);
+            font-weight: 600;
+            color: #6B4E36
+        }
+
+        .stars {
+            font-size: clamp(16px, 3vh, 24px);
+            letter-spacing: 2px;
+            white-space: nowrap
+        }
+
+        .emb .page {
+            padding: 0
+        }
+
+        .emb .card {
+            border: 0;
+            background: none;
+            padding: 0
+        }
+
+        .emb .hd {
+            display: none
+        }
+
+        /* ===== KHUNG GAME BÊN TRONG ===== */
+        .gbox {
+            flex: 1;
+            min-height: 0;
+            border-radius: 24px;
+            background: #FFF4E4;
+            padding: 1.4vh 1.4vw;
+            display: grid;
+            grid-template-rows: minmax(0, 1fr) auto;
+            gap: 1.2vh
+        }
+
+        /* ===== NÔNG TRẠI ===== */
+        .scene {
+            position: relative;
+            min-height: 0;
+            overflow: hidden;
+            border: 4px solid var(--line);
+            border-radius: 22px;
+            background: linear-gradient(#BDE5F6, #E8F7FC 55%);
+            --cw: min(5vw, 6.6vh)
+        }
+
+        .sun {
+            position: absolute;
+            left: 3%;
+            top: 4%;
+            width: min(11vh, 12vw)
+        }
+
+        .sun .ry {
+            transform-origin: 50px 50px;
+            animation: spin 16s linear infinite
+        }
+
+        .cld {
+            position: absolute;
+            left: 0;
+            top: var(--t);
+            width: var(--w);
+            height: calc(var(--w)*.34);
+            background: #fff;
+            border-radius: 99px;
+            animation: drift var(--s) linear infinite
+        }
+
+        .cld::before,
+        .cld::after {
+            content: '';
+            position: absolute;
+            background: #fff;
+            border-radius: 50%
+        }
+
+        .cld::before {
+            left: 16%;
+            top: -48%;
+            width: 40%;
+            height: 112%
+        }
+
+        .cld::after {
+            left: 46%;
+            top: -30%;
+            width: 32%;
+            height: 90%
+        }
+
+        .hill {
+            position: absolute;
+            border-radius: 50% 50% 0 0
+        }
+
+        .h1 {
+            left: -10%;
+            width: 70%;
+            bottom: 26%;
+            height: 34%;
+            background: #B7E39A
+        }
+
+        .h2 {
+            right: -15%;
+            width: 75%;
+            bottom: 26%;
+            height: 26%;
+            background: #A5DB86
+        }
+
+        .wm {
+            position: absolute;
+            left: 38%;
+            top: 2%;
+            height: 36%;
+            aspect-ratio: 60/100
+        }
+
+        .wm .bl {
+            transform-origin: 30px 34px;
+            animation: spin 7s linear infinite
+        }
+
+        .barn {
+            position: absolute;
+            right: 4%;
+            top: 3%;
+            height: 30%;
+            aspect-ratio: 90/80
+        }
+
+        .gr {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 28%;
+            background: #9AD37A;
+            border-top: 6px solid #86C468
+        }
+
+        .fence {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 9%;
+            background: repeating-linear-gradient(90deg, #D9A25E 0 12px, transparent 12px 28px)
+        }
+
+        .fence::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 30%;
+            height: 18%;
+            background: #C98A47
+        }
+
+        .hen {
+            position: absolute;
+            left: 0;
+            bottom: 1.5%;
+            font-size: min(4.2vh, 4vw);
+            line-height: 1;
+            animation: walk 22s linear infinite;
+            animation-delay: var(--dl)
+        }
+
+        .hen i {
+            display: block;
+            font-style: normal;
+            animation: peck .7s ease-in-out infinite
+        }
+
+        .bf {
+            position: absolute;
+            left: 0;
+            top: 30%;
+            font-size: min(4vh, 4vw);
+            pointer-events: none;
+            animation: fly 14s linear infinite
+        }
+
+        .fx {
+            position: absolute;
+            bottom: 34%;
+            font-size: min(4.4vh, 4vw);
+            line-height: 1;
+            pointer-events: none;
+            animation: floatup 1.7s ease-out both
+        }
+
+        /* ===== HAI KHUNG GỖ ===== */
+        .stage {
+            position: absolute;
+            left: 2%;
+            right: 2%;
+            top: 20%;
+            bottom: 8%;
+            display: grid;
+            grid-template-columns: 1fr auto 1.7fr;
+            gap: 1.6vw;
+            align-items: stretch
+        }
+
+        .pn {
+            background: #FFF1D6;
+            border: 5px solid #C98A47;
+            border-radius: 22px;
+            box-shadow: 0 5px 0 #A8692B;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: .6vh;
+            padding: .8vh .8vw;
+            min-height: 0;
+            overflow: hidden;
+            animation: pin .5s ease
+        }
+
+        .pn.ok {
+            background: #EAF7EF;
+            border-color: var(--ok);
+            box-shadow: 0 5px 0 #1F7A44
+        }
+
+        .pn.no {
+            animation: shake .4s
+        }
+
+        .who {
+            font-size: min(7.5vh, 9vw);
+            line-height: 1
+        }
+
+        .who.i1 {
+            animation: rhop 1.6s ease-in-out infinite
+        }
+
+        .who.i2 {
+            transform-origin: 50% 100%;
+            animation: nod 2.4s ease-in-out infinite
+        }
+
+        .who.hop {
+            animation: hop .5s 3
+        }
+
+        .cs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, var(--cw));
+            gap: .8vh .7vw;
+            justify-content: center;
+            width: 100%
+        }
+
+        .eq {
+            align-self: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: min(8vh, 6vw);
+            height: min(8vh, 6vw);
+            border-radius: 50%;
+            background: #fff;
+            border: 4px solid #C98A47;
+            font-size: min(5.5vh, 4vw);
+            color: #B7A98F;
+            line-height: 1
+        }
+
+        .eq.on {
+            color: var(--ok);
+            border-color: var(--ok);
+            animation: pop2 .5s
+        }
+
+        .cr {
+            display: block;
+            width: var(--cw);
+            height: calc(var(--cw)*2);
+            overflow: visible
+        }
+
+        .cl,
+        .cb {
+            fill: #fff;
+            stroke: #555;
+            stroke-width: 2;
+            stroke-linejoin: round
+        }
+
+        .ln {
+            stroke: #bbb;
+            stroke-width: 1.5;
+            fill: none;
+            stroke-linecap: round
+        }
+
+        .on .cl {
+            fill: #3BA55C;
+            stroke: #2A7A42
+        }
+
+        .on .cb {
+            fill: #F27B21;
+            stroke: #C4570A
+        }
+
+        .on .ln {
+            stroke: #C4570A
+        }
+
+        .cbtn {
+            background: none;
+            border: 0;
+            padding: 0;
+            cursor: pointer;
+            border-radius: 10px
+        }
+
+        .cbtn.on svg {
+            animation: pop .25s
+        }
+
+        .fade {
+            opacity: .25;
+            pointer-events: none
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        @keyframes drift {
+            from {
+                transform: translateX(-25vw)
+            }
+
+            to {
+                transform: translateX(105vw)
+            }
+        }
+
+        @keyframes fly {
+            0% {
+                transform: translate(-5vw, 0)
+            }
+
+            25% {
+                transform: translate(25vw, -6vh)
+            }
+
+            50% {
+                transform: translate(55vw, 2vh)
+            }
+
+            75% {
+                transform: translate(80vw, -5vh)
+            }
+
+            100% {
+                transform: translate(105vw, 0)
+            }
+        }
+
+        @keyframes walk {
+            from {
+                transform: translateX(92vw)
+            }
+
+            to {
+                transform: translateX(-8vw)
+            }
+        }
+
+        @keyframes peck {
+            50% {
+                transform: translateY(-12%) rotate(-8deg)
+            }
+        }
+
+        @keyframes rhop {
+
+            0%,
+            60%,
+            100% {
+                translate: 0 0
+            }
+
+            30% {
+                translate: 0 -12%
+            }
+        }
+
+        @keyframes nod {
+
+            0%,
+            100% {
+                rotate: 0deg
+            }
+
+            50% {
+                rotate: 6deg
+            }
+        }
+
+        @keyframes hop {
+            50% {
+                translate: 0 -16%
+            }
+        }
+
+        @keyframes shake {
+            25% {
+                translate: -8px 0
+            }
+
+            75% {
+                translate: 8px 0
+            }
+        }
+
+        @keyframes pop {
+            50% {
+                scale: 1.2
+            }
+        }
+
+        @keyframes pop2 {
+            50% {
+                scale: 1.3
+            }
+        }
+
+        @keyframes pin {
+            from {
+                opacity: 0;
+                transform: translateY(12px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        @keyframes floatup {
+            from {
+                transform: translateY(0) scale(.6);
+                opacity: 1
+            }
+
+            to {
+                transform: translateY(-22vh) scale(1.2) rotate(var(--r));
+                opacity: 0
+            }
+        }
+
+        /* ===== SAY ===== */
+        .say {
+            display: flex;
+            align-items: center;
+            gap: 2vw;
+            min-height: 9vh
+        }
+
+        .av {
+            font-size: min(8.5vh, 12vw);
+            line-height: 1
+        }
+
+        .bub {
+            flex: 1;
+            min-width: 0;
+            background: #fff;
+            border: 3px solid var(--line);
+            border-radius: 18px;
+            padding: .8vh 2vw;
+            display: flex;
+            flex-wrap: wrap;
+            gap: .4vh 1vw;
+            align-items: center;
+            font-size: clamp(15px, 3.2vh, 28px);
+            min-height: 7vh
+        }
+
+        .bub.bad {
+            border-color: var(--bad);
+            color: var(--bad)
+        }
+
+        .w {
+            padding: 0 .45em;
+            border-radius: 10px;
+            color: #B7A98F
+        }
+
+        .w.said {
+            color: var(--ink)
+        }
+
+        .w.on {
+            background: var(--accl);
+            color: var(--ink)
+        }
+
+        .rb,
+        .nx,
+        .ck {
+            border-radius: 50%;
+            border: 3px solid var(--accd);
+            background: var(--acc);
+            color: var(--ink);
+            cursor: pointer;
+            font: inherit;
+            width: max(48px, 7vh);
+            height: max(48px, 7vh);
+            font-size: clamp(18px, 3.6vh, 30px);
+            box-shadow: 0 4px 0 var(--accd);
+            padding: 0
+        }
+
+        .ck {
+            background: var(--ok);
+            border-color: #1F7A44;
+            color: #fff;
+            box-shadow: 0 4px 0 #1F7A44
+        }
+
+        [hidden] {
+            display: none !important
+        }
+
+        button:focus-visible {
+            outline: 4px solid #345FA8;
+            outline-offset: 2px
+        }
+
+        .end {
+            grid-row: 1/3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3vh;
+            text-align: center
+        }
+
+        .end .st {
+            font-size: min(12vh, 14vw)
+        }
+
+        .end h2 {
+            font-size: min(7vh, 10vw)
+        }
+
+        .big {
+            height: max(56px, 9vh);
+            padding: 0 6vw;
+            border-radius: 20px;
+            border: 4px solid var(--accd);
+            background: var(--acc);
+            color: var(--ink);
+            font: inherit;
+            font-size: min(5vh, 7vw);
+            cursor: pointer;
+            box-shadow: 0 5px 0 var(--accd)
+        }
+
+        @media (prefers-reduced-motion:reduce) {
+            * {
+                animation: none !important;
+                transition: none !important
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <section class="card">
+            <div class="hd">
+                <div class="tt">
+                    <h2>Colour to make equal number of carrots</h2>
+                    <p class="ins">Tô màu cà rốt cho ngựa bằng số cà rốt của thỏ nhé!</p>
+                </div>
+                <div class="stars" id="stars"></div>
+            </div>
+            <div class="gbox" id="app"></div>
+        </section>
+    </div>
+    <script>
+        if (new URLSearchParams(location.search).has('embed')) document.body.classList.add('emb');
+        const W = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+        const N = [3, 4, 2, 5, 6];
+        const HINT = 'Đếm cà rốt của thỏ. Tô cà rốt cho ngựa bằng thỏ, rồi bấm ✓ nhé!';
+        const app = document.getElementById('app'), t0 = performance.now();
+        let i = 0, n, m, on, locked, words, spk = 0;
+        const rand = k => Math.floor(Math.random() * k);
+        const cap = s => s[0].toUpperCase() + s.slice(1);
+        const setStars = () => { document.getElementById('stars').textContent = N.map((_, k) => k < i ? '⭐' : '☆').join('') };
+        function say(t) { try { const u = new SpeechSynthesisUtterance(t); u.lang = 'en-US'; u.rate = .8; speechSynthesis.cancel(); speechSynthesis.speak(u) } catch (e) { } }
+        const carrot = () => `<svg class="cr" viewBox="0 0 40 80"><path class="cl" d="M20 24 C14 14 10 8 12 2 C16 6 19 12 20 20 C21 12 24 6 28 2 C30 8 26 14 20 24Z"/><path class="cb" d="M10 24 Q20 18 30 24 Q27 54 20 78 Q13 54 10 24Z"/><path class="ln" d="M14 34h6M20 46h6M15 56h5"/></svg>`;
+
+        /* ---------- nông trại ---------- */
+        function farm(el, left, right) {
+            return `<div class="scene" id="sc">
+ <svg class="sun" viewBox="0 0 100 100"><g class="ry"><circle cx="50" cy="50" r="38" fill="none" stroke="#FFC933" stroke-width="9" stroke-dasharray="6 23.85" stroke-linecap="round"/></g><circle cx="50" cy="50" r="25" fill="#FFD54A"/><circle cx="41" cy="46" r="3" fill="#2B1A0E"/><circle cx="59" cy="46" r="3" fill="#2B1A0E"/><path d="M41 57Q50 66 59 57" fill="none" stroke="#2B1A0E" stroke-width="3" stroke-linecap="round"/></svg>
+ <i class="cld" style="--t:8%;--w:15vw;--s:75s;animation-delay:-${(el + 10).toFixed(1)}s"></i>
+ <i class="cld" style="--t:18%;--w:11vw;--s:55s;animation-delay:-${(el + 30).toFixed(1)}s"></i>
+ <i class="hill h1"></i><i class="hill h2"></i>
+ <svg class="wm" viewBox="0 0 60 100"><polygon points="22,98 38,98 34,40 26,40" fill="#F5E6CF" stroke="#B8641C" stroke-width="2.5" stroke-linejoin="round"/><rect x="27" y="80" width="6" height="18" rx="2" fill="#B8641C"/><g class="bl" fill="#fff" stroke="#B8641C" stroke-width="2"><rect x="26" y="4" width="8" height="28" rx="2"/><rect x="26" y="4" width="8" height="28" rx="2" transform="rotate(90 30 34)"/><rect x="26" y="4" width="8" height="28" rx="2" transform="rotate(180 30 34)"/><rect x="26" y="4" width="8" height="28" rx="2" transform="rotate(270 30 34)"/></g><circle cx="30" cy="34" r="5" fill="#D2543C" stroke="#8E2F1C" stroke-width="2"/></svg>
+ <svg class="barn" viewBox="0 0 90 80"><rect x="8" y="28" width="74" height="50" fill="#D2543C" stroke="#8E2F1C" stroke-width="3"/><polygon points="3,32 45,6 87,32" fill="#B8402A" stroke="#8E2F1C" stroke-width="3" stroke-linejoin="round"/><rect x="31" y="44" width="28" height="34" fill="#F7E7D4" stroke="#fff" stroke-width="3"/><path d="M31 44L59 78M59 44L31 78" stroke="#D2543C" stroke-width="3"/><circle cx="45" cy="24" r="5" fill="#FFE9B0" stroke="#8E2F1C" stroke-width="2"/></svg>
+ <div class="gr"></div>
+ <div class="fence"></div>
+ <span class="hen" style="--dl:-${(el + 4).toFixed(1)}s"><i>🐔</i></span>
+ <span class="hen" style="--dl:-${(el + 15).toFixed(1)}s;animation-duration:34s"><i>🐥</i></span>
+ <div class="stage">
+  <div class="pn" id="pl"><span class="who i1" id="w1">🐰</span><div class="cs">${left}</div></div>
+  <div class="eq" id="eq">?</div>
+  <div class="pn" id="pr"><span class="who i2" id="w2">🐴</span><div class="cs">${right}</div></div>
+ </div>
+ <span class="bf">🦋</span>
+</div>`;
+        }
+
+        function newRound() {
+            n = N[i]; m = Math.min(10, n + 2 + rand(3)); on = Array(m).fill(false); locked = false;
+            words = [cap(W[n]), 'is equal to', W[n] + '.'];
+            const el = (performance.now() - t0) / 1000;
+            setStars();
+            const left = Array.from({ length: n }, () => `<div class="on">${carrot()}</div>`).join('');
+            const right = Array.from({ length: m }, (_, k) => `<button class="cbtn" data-i="${k}" aria-label="carrot ${k + 1}">${carrot()}</button>`).join('');
+            app.innerHTML = `${farm(el, left, right)}
+ <div class="say"><span class="av">🧑‍🌾</span><div class="bub" id="bub">${HINT}</div>
+ <button class="ck" id="ck" aria-label="check">✓</button><button class="rb" id="rb" hidden aria-label="listen again">🔊</button><button class="nx" id="nx" hidden aria-label="next">➜</button></div>`;
+            document.getElementById('ck').onclick = check;
+            document.getElementById('rb').onclick = () => speakSeq();
+            document.getElementById('nx').onclick = () => { spk++; try { speechSynthesis.cancel() } catch (e) { } i++; i >= N.length ? end() : newRound() };
+        }
+        function count() { return on.filter(Boolean).length }
+        function bub(t, bad) { const b = document.getElementById('bub'); b.className = 'bub' + (bad ? ' bad' : ''); b.textContent = t }
+        function wrong(t) {
+            bub(t, true);
+            const p = document.getElementById('pr'); p.classList.remove('no'); void p.offsetWidth; p.classList.add('no');
+        }
+        function check() {
+            if (locked) return;
+            const c = count();
+            if (c === 0) return wrong('Hãy tô cà rốt cho ngựa nhé!');
+            if (c > n) return wrong('Nhiều quá rồi! Bấm vào củ đã tô để bỏ bớt nhé.');
+            if (c < n) return wrong('Chưa đủ! Tô thêm cà rốt nhé.');
+            success();
+        }
+        function burst() {
+            const sc = document.getElementById('sc'); if (!sc) return;
+            ['❤️', '⭐', '🌟', '💛', '❤️', '⭐'].forEach((e, k) => {
+                const s = document.createElement('span'); s.className = 'fx'; s.textContent = e;
+                s.style.left = (16 + k * 13) + '%'; s.style.animationDelay = (k * .12) + 's'; s.style.setProperty('--r', ((k % 2 ? 1 : -1) * 25) + 'deg');
+                sc.appendChild(s); setTimeout(() => s.remove(), 2300);
+            });
+        }
+        function success() {
+            locked = true;
+            document.getElementById('pl').classList.add('ok'); document.getElementById('pr').classList.add('ok');
+            const eq = document.getElementById('eq'); eq.textContent = '='; eq.classList.add('on');
+            document.getElementById('w1').classList.add('hop'); document.getElementById('w2').classList.add('hop');
+            document.querySelectorAll('.cbtn:not(.on)').forEach(b => b.classList.add('fade'));
+            document.getElementById('ck').hidden = true; document.getElementById('rb').hidden = false;
+            burst();
+            const b = document.getElementById('bub'); b.className = 'bub';
+            b.innerHTML = words.map((t, k) => `<span class="w" data-k="${k}">${t}</span>`).join('');
+            speakSeq();
+        }
+        function mark(idx) { document.querySelectorAll('.w[data-k]').forEach(e => { const k = +e.dataset.k; e.className = 'w' + (k < idx ? ' said' : k === idx ? ' on' : '') }) }
+        function speakSeq() {
+            const id = ++spk; let k = 0;
+            try { speechSynthesis.cancel() } catch (e) { }
+            const next = () => {
+                if (id !== spk) return;
+                if (k >= words.length) { mark(99); document.getElementById('nx').hidden = false; return }
+                const idx = k++; mark(idx); let fired = false;
+                const go = () => { if (fired) return; fired = true; setTimeout(next, 150) };
+                try { const u = new SpeechSynthesisUtterance(words[idx].replace('.', '')); u.lang = 'en-US'; u.rate = .75; u.onend = go; u.onerror = go; speechSynthesis.speak(u) } catch (e) { }
+                setTimeout(go, 2200);
+            };
+            next();
+        }
+        function end() {
+            setStars();
+            app.innerHTML = `<div class="end"><div class="st">🐰🥕🐴</div><h2>Giỏi quá! Great job!</h2><button class="big" id="again">Chơi lại</button></div>`;
+            document.getElementById('again').onclick = () => { i = 0; newRound() };
+        }
+        app.addEventListener('click', e => {
+            const b = e.target.closest('.cbtn'); if (!b || locked) return;
+            const k = +b.dataset.i; on[k] = !on[k]; b.classList.toggle('on', on[k]);
+            if (on[k]) say(W[count()]);
+            const bb = document.getElementById('bub'); if (bb.classList.contains('bad')) bub(HINT);
+        });
+        newRound();
+    </script>
+</body>
+
+</html>
