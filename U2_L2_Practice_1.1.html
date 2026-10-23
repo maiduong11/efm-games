@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Write and say - Compare numbers</title>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --orange: #D9803A;
+            --orange-d: #B9661F;
+            --brown: #2B1D14;
+            --sand: #F7EFE0;
+            --green: #5E8C3A;
+            --ok: #3FA564;
+            --bad: #D9534F;
+            --line: #F0DDBE;
+            --font: 'Baloo 2', 'Nunito', 'Segoe UI', system-ui, sans-serif
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent
+        }
+
+        [hidden] {
+            display: none !important
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: transparent;
+            font-family: var(--font);
+            color: var(--brown);
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation
+        }
+
+        body {
+            display: grid;
+            place-items: center
+        }
+
+        button {
+            font-family: inherit;
+            color: inherit
+        }
+
+        #fit {
+            position: relative
+        }
+
+        #stage {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1000px;
+            height: 560px;
+            transform-origin: 0 0;
+            background: var(--sand);
+            border-radius: 28px;
+            overflow: hidden
+        }
+
+        #stage::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 6px solid var(--green);
+            border-radius: 28px;
+            pointer-events: none;
+            z-index: 50
+        }
+
+        #bg {
+            position: absolute;
+            left: 0;
+            top: 0
+        }
+
+        /* HUD */
+        #hud {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1000px;
+            height: 62px;
+            padding: 10px 28px 0;
+            z-index: 10;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center
+        }
+
+        #stars {
+            display: flex;
+            gap: 6px;
+            font-size: 26px
+        }
+
+        .star {
+            filter: grayscale(1);
+            opacity: .4;
+            transition: .3s
+        }
+
+        .star.on {
+            filter: none;
+            opacity: 1;
+            transform: scale(1.15)
+        }
+
+        #instr {
+            background: #fff;
+            border: 3px solid var(--orange);
+            border-radius: 999px;
+            padding: 2px 28px;
+            text-align: center;
+            line-height: 1.05
+        }
+
+        #instr b {
+            display: block;
+            font-size: 24px;
+            font-weight: 800
+        }
+
+        #instr small {
+            font-size: 13px;
+            opacity: .7
+        }
+
+        #spk {
+            justify-self: end;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            border: 3px solid #E9CFA9;
+            background: #FFF7E8;
+            font-size: 22px;
+            cursor: pointer
+        }
+
+        /* Nhân vật */
+        .an {
+            position: absolute;
+            z-index: 2
+        }
+
+        #monkey {
+            left: 210px;
+            top: 64px;
+            width: 160px;
+            height: 170px
+        }
+
+        #rabbit {
+            left: 630px;
+            top: 56px;
+            width: 160px;
+            height: 190px
+        }
+
+        .an svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+            overflow: visible
+        }
+
+        .bob {
+            animation: bob 2.2s ease-in-out infinite
+        }
+
+        .hop {
+            animation: hop .6s ease 2
+        }
+
+        .eye {
+            transform-box: fill-box;
+            transform-origin: center;
+            animation: blink 4s infinite
+        }
+
+        .ear {
+            transform-box: fill-box;
+            transform-origin: 50% 100%;
+            animation: ear 3s ease-in-out infinite
+        }
+
+        .ear.r {
+            animation-direction: reverse
+        }
+
+        .deco {
+            position: absolute;
+            font-size: 110px;
+            line-height: 1;
+            z-index: 1
+        }
+
+        /* Dấu so sánh ở giữa */
+        #big {
+            position: absolute;
+            left: 420px;
+            top: 120px;
+            width: 160px;
+            height: 170px;
+            display: grid;
+            place-items: center;
+            font-size: 150px;
+            font-weight: 800;
+            line-height: 1;
+            color: #B9D6E3;
+            z-index: 5;
+            text-shadow: 0 4px 0 rgba(255, 255, 255, .6)
+        }
+
+        #big.on {
+            color: var(--orange);
+            animation: pop .45s
+        }
+
+        /* Trái cây */
+        .fr {
+            position: absolute;
+            top: 220px;
+            width: 236px;
+            height: 96px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-content: flex-end;
+            gap: 0 2px;
+            z-index: 4
+        }
+
+        #fl {
+            left: 172px
+        }
+
+        #frt {
+            left: 592px
+        }
+
+        .board {
+            position: absolute;
+            top: 308px;
+            width: 250px;
+            height: 20px;
+            border-radius: 10px;
+            background: #C98F4A;
+            box-shadow: 0 4px 0 #A8742F;
+            z-index: 3
+        }
+
+        .f {
+            position: relative;
+            width: 46px;
+            height: 46px;
+            border: 0;
+            background: none;
+            font-size: 40px;
+            line-height: 46px;
+            cursor: pointer;
+            animation: pop .35s backwards
+        }
+
+        .f.win {
+            animation: hop .6s ease 2
+        }
+
+        .f.hl {
+            animation: bounce .5s
+        }
+
+        .f b {
+            position: absolute;
+            right: -2px;
+            top: -4px;
+            min-width: 22px;
+            height: 22px;
+            border-radius: 11px;
+            background: var(--ok);
+            color: #fff;
+            font-size: 14px;
+            line-height: 22px;
+            display: none
+        }
+
+        .f.c b {
+            display: block
+        }
+
+        #toast {
+            position: absolute;
+            left: 300px;
+            top: 68px;
+            width: 400px;
+            text-align: center;
+            font-size: 26px;
+            font-weight: 800;
+            background: #fff;
+            border: 3px solid var(--orange);
+            border-radius: 999px;
+            padding: 2px 10px;
+            opacity: 0;
+            transform: scale(.8);
+            transition: .25s;
+            z-index: 20;
+            pointer-events: none
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: none
+        }
+
+        /* Bảng điều khiển */
+        #card {
+            position: absolute;
+            left: 24px;
+            top: 332px;
+            width: 952px;
+            height: 214px;
+            background: #fff;
+            border: 3px solid var(--line);
+            border-radius: 24px;
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 12px;
+            padding: 12px 16px;
+            z-index: 6
+        }
+
+        #left {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px
+        }
+
+        #eq {
+            display: flex;
+            gap: 14px
+        }
+
+        .sl {
+            width: 100px;
+            height: 92px;
+            border: 4px dashed #E2CFAE;
+            border-radius: 20px;
+            display: grid;
+            place-items: center;
+            font-size: 56px;
+            font-weight: 800;
+            cursor: pointer;
+            background: #FFFCF5
+        }
+
+        .sl.on {
+            border-style: solid;
+            border-color: var(--line);
+            background: #fff
+        }
+
+        .sl.nx {
+            animation: nx 1s infinite
+        }
+
+        .sl.good {
+            border-style: solid;
+            border-color: var(--ok);
+            background: #E8F7EC
+        }
+
+        #ss {
+            color: var(--orange);
+            font-size: 68px
+        }
+
+        #under {
+            min-height: 78px;
+            display: grid;
+            place-items: center;
+            text-align: center
+        }
+
+        #sent {
+            font-size: 28px;
+            font-weight: 800;
+            line-height: 1.1
+        }
+
+        #right {
+            display: grid;
+            place-items: center
+        }
+
+        #keys {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            width: 100%;
+            height: 100%
+        }
+
+        .k {
+            font: 800 36px var(--font);
+            background: #FFF7E8;
+            border: 3px solid var(--line);
+            border-radius: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #E9CFA9
+        }
+
+        .k:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #E9CFA9
+        }
+
+        .k.s {
+            background: var(--orange);
+            color: #fff;
+            border-color: var(--orange-d);
+            box-shadow: 0 4px 0 var(--orange-d);
+            font-size: 46px
+        }
+
+        #sayBox {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px
+        }
+
+        .row {
+            display: flex;
+            gap: 14px
+        }
+
+        #micmsg {
+            font-size: 16px;
+            opacity: .7;
+            min-height: 20px
+        }
+
+        .btn {
+            font: 800 26px var(--font);
+            border-radius: 999px;
+            padding: 8px 28px;
+            border: 0;
+            cursor: pointer;
+            box-shadow: 0 5px 0 rgba(0, 0, 0, .18)
+        }
+
+        .btn:active {
+            transform: translateY(3px)
+        }
+
+        .btn:disabled {
+            opacity: .35;
+            cursor: default;
+            box-shadow: none
+        }
+
+        .btn.primary {
+            background: var(--orange);
+            color: #fff
+        }
+
+        .btn.ghost {
+            background: #fff;
+            border: 3px solid #E9CFA9
+        }
+
+        .btn.live {
+            background: var(--ok);
+            color: #fff;
+            animation: pulse .8s infinite
+        }
+
+        #done {
+            background: var(--ok);
+            color: #fff;
+            font-size: 30px;
+            padding: 8px 44px
+        }
+
+        #overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 40;
+            background: rgba(253, 249, 240, .95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px
+        }
+
+        #ovTitle {
+            font-size: 54px;
+            font-weight: 800;
+            line-height: 1
+        }
+
+        #ovSub {
+            font-size: 22px;
+            opacity: .7
+        }
+
+        #ovEmoji {
+            font-size: 80px;
+            margin: 8px 0
+        }
+
+        .conf {
+            position: absolute;
+            top: -40px;
+            z-index: 30;
+            pointer-events: none;
+            animation: confall 1.8s ease-in forwards
+        }
+
+        @keyframes pop {
+            from {
+                transform: scale(.3);
+                opacity: 0
+            }
+
+            to {
+                transform: none;
+                opacity: 1
+            }
+        }
+
+        @keyframes pulse {
+            50% {
+                scale: 1.1
+            }
+        }
+
+        @keyframes bounce {
+            40% {
+                transform: translateY(-14px)
+            }
+
+            70% {
+                transform: translateY(0)
+            }
+
+            85% {
+                transform: translateY(-5px)
+            }
+        }
+
+        @keyframes bob {
+            50% {
+                transform: translateY(-6px)
+            }
+        }
+
+        @keyframes hop {
+            40% {
+                transform: translateY(-26px)
+            }
+        }
+
+        @keyframes blink {
+
+            0%,
+            94%,
+            100% {
+                transform: scaleY(1)
+            }
+
+            97% {
+                transform: scaleY(.1)
+            }
+        }
+
+        @keyframes ear {
+
+            0%,
+            100% {
+                rotate: 0deg
+            }
+
+            50% {
+                rotate: 6deg
+            }
+        }
+
+        @keyframes nx {
+            50% {
+                border-color: var(--orange)
+            }
+        }
+
+        @keyframes confall {
+            to {
+                transform: translateY(640px) rotate(360deg)
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="fit">
+        <div id="stage">
+
+            <svg id="bg" width="1000" height="560" viewBox="0 0 1000 560">
+                <defs>
+                    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stop-color="#A9DAF0" />
+                        <stop offset="1" stop-color="#E4F5FB" />
+                    </linearGradient>
+                </defs>
+                <rect width="1000" height="336" fill="url(#sky)" />
+                <g fill="#fff" opacity=".9">
+                    <ellipse cx="170" cy="118" rx="46" ry="16" />
+                    <ellipse cx="200" cy="106" rx="30" ry="16" />
+                    <ellipse cx="800" cy="112" rx="44" ry="15" />
+                    <ellipse cx="828" cy="102" rx="28" ry="14" />
+                </g>
+                <path d="M0 270Q250 235 500 268T1000 262V336H0Z" fill="#8CC152" />
+                <path d="M0 300Q300 275 600 298T1000 292V336H0Z" fill="#7DB544" />
+            </svg>
+
+            <div class="deco" style="left:24px;top:176px">&#127795;</div>
+            <div class="deco" style="left:866px;top:176px">&#127795;</div>
+
+            <div id="hud">
+                <div id="stars"></div>
+                <div id="instr"><b></b><small></small></div>
+                <button id="spk" aria-label="Listen">&#128266;</button>
+            </div>
+
+            <!-- Khỉ -->
+            <div class="an" id="monkey"><svg viewBox="0 0 160 170" class="bob">
+                    <path d="M128 150Q158 140 150 104Q146 90 134 92" stroke="#A86B35" stroke-width="12" fill="none"
+                        stroke-linecap="round" />
+                    <path d="M30 170Q30 124 80 124Q130 124 130 170Z" fill="#A86B35" />
+                    <ellipse cx="80" cy="160" rx="26" ry="28" fill="#F5D7B0" />
+                    <circle cx="28" cy="78" r="18" fill="#A86B35" />
+                    <circle cx="28" cy="78" r="10" fill="#F2C9A0" />
+                    <circle cx="132" cy="78" r="18" fill="#A86B35" />
+                    <circle cx="132" cy="78" r="10" fill="#F2C9A0" />
+                    <circle cx="80" cy="72" r="52" fill="#A86B35" />
+                    <circle cx="64" cy="64" r="20" fill="#F5D7B0" />
+                    <circle cx="96" cy="64" r="20" fill="#F5D7B0" />
+                    <ellipse cx="80" cy="86" rx="36" ry="30" fill="#F5D7B0" />
+                    <g class="eye">
+                        <circle cx="64" cy="68" r="7" fill="#2B1D14" />
+                        <circle cx="66" cy="65" r="2.5" fill="#fff" />
+                    </g>
+                    <g class="eye">
+                        <circle cx="96" cy="68" r="7" fill="#2B1D14" />
+                        <circle cx="98" cy="65" r="2.5" fill="#fff" />
+                    </g>
+                    <circle cx="75" cy="86" r="2" fill="#8B5A2B" />
+                    <circle cx="85" cy="86" r="2" fill="#8B5A2B" />
+                    <path d="M66 96Q80 110 94 96" stroke="#8B5A2B" stroke-width="3" fill="none"
+                        stroke-linecap="round" />
+                    <circle cx="52" cy="90" r="6" fill="#FF9E9E" opacity=".5" />
+                    <circle cx="108" cy="90" r="6" fill="#FF9E9E" opacity=".5" />
+                </svg></div>
+
+            <!-- Thỏ -->
+            <div class="an" id="rabbit"><svg viewBox="0 0 160 190" class="bob">
+                    <g class="ear">
+                        <ellipse cx="54" cy="44" rx="15" ry="42" fill="#fff" stroke="#E6DCD2" stroke-width="2" />
+                        <ellipse cx="54" cy="48" rx="7" ry="28" fill="#FFB6C1" />
+                    </g>
+                    <g class="ear r">
+                        <ellipse cx="106" cy="44" rx="15" ry="42" fill="#fff" stroke="#E6DCD2" stroke-width="2" />
+                        <ellipse cx="106" cy="48" rx="7" ry="28" fill="#FFB6C1" />
+                    </g>
+                    <path d="M28 190Q28 144 80 144Q132 144 132 190Z" fill="#fff" stroke="#E6DCD2" stroke-width="2" />
+                    <ellipse cx="80" cy="104" rx="50" ry="44" fill="#fff" stroke="#E6DCD2" stroke-width="2" />
+                    <g class="eye">
+                        <circle cx="62" cy="98" r="6.5" fill="#2B1D14" />
+                        <circle cx="64" cy="95" r="2.3" fill="#fff" />
+                    </g>
+                    <g class="eye">
+                        <circle cx="98" cy="98" r="6.5" fill="#2B1D14" />
+                        <circle cx="100" cy="95" r="2.3" fill="#fff" />
+                    </g>
+                    <ellipse cx="80" cy="110" rx="5" ry="3.5" fill="#FF8FA3" />
+                    <path d="M80 113V119M80 119Q72 127 66 121M80 119Q88 127 94 121" stroke="#8B5A2B" stroke-width="2"
+                        fill="none" stroke-linecap="round" />
+                    <rect x="75" y="121" width="10" height="9" rx="2" fill="#fff" stroke="#E6DCD2" stroke-width="1.5" />
+                    <circle cx="48" cy="112" r="7" fill="#FFB6C1" opacity=".55" />
+                    <circle cx="112" cy="112" r="7" fill="#FFB6C1" opacity=".55" />
+                    <path d="M30 106L48 109M30 116L48 114M130 106L112 109M130 116L112 114" stroke="#CDBFB2"
+                        stroke-width="1.5" stroke-linecap="round" />
+                </svg></div>
+
+            <div class="board" style="left:165px"></div>
+            <div class="board" style="left:585px"></div>
+            <div class="fr" id="fl"></div>
+            <div class="fr" id="frt"></div>
+
+            <div id="big">?</div>
+            <div id="toast"></div>
+
+            <div id="card">
+                <div id="left">
+                    <div id="eq">
+                        <div class="sl" id="sa"></div>
+                        <div class="sl" id="ss"></div>
+                        <div class="sl" id="sb"></div>
+                    </div>
+                    <div id="under"><button class="btn" id="done" disabled>&#10003; Done!</button>
+                        <div id="sent" hidden></div>
+                    </div>
+                </div>
+                <div id="right">
+                    <div id="keys"></div>
+                    <div id="sayBox" hidden>
+                        <div class="row"><button class="btn ghost" id="listen">&#128266; Listen</button><button
+                                class="btn primary" id="mic">&#127908; Say it!</button></div>
+                        <div id="micmsg"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="overlay" hidden>
+                <div id="ovTitle">Great job!</div>
+                <div id="ovSub"></div>
+                <div id="ovEmoji"></div>
+                <button class="btn primary" id="go" style="font-size:34px;padding:8px 48px">Play again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            /* ============ CẤU HÌNH (sửa ở đây) ============ */
+            const ROUNDS = [[3, 2], [1, 4], [3, 3], [5, 2], [2, 6]];   // [số quả chuối của khỉ, số quả táo của thỏ] mỗi lượt (0-10)
+            const FL = '🍌', FR = '🍎';                          // đổi trái cây tại đây
+            /* ============================================== */
+            const W = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+            const REL = { '>': 'greater than', '<': 'less than', '=': 'equal to' };
+            const KEY = { '>': /great|grader/, '<': /less/, '=': /equal/ };
+            const INSTR = { write: ['Write the numbers and the sign!', 'Chọn số và dấu so sánh'], say: ['Say it!', 'Đọc to câu so sánh'] };
+            const $ = s => document.querySelector(s), wait = ms => new Promise(r => setTimeout(r, ms)), cap = s => s[0].toUpperCase() + s.slice(1);
+
+            /* Scale vừa khung */
+            const fit = $('#fit'), stage = $('#stage');
+            function resize() { const s = Math.min(innerWidth / 1000, innerHeight / 560); fit.style.width = 1000 * s + 'px'; fit.style.height = 560 * s + 'px'; stage.style.transform = `scale(${s})` }
+            addEventListener('resize', resize); resize();
+
+            /* Âm thanh */
+            let ac;
+            function audio() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)() } catch (e) { } } if (ac && ac.state === 'suspended') ac.resume(); return ac }
+            function tone(f, d = .15, type = 'sine', t0 = 0, vol = .18) {
+                const a = audio(); if (!a) return; const o = a.createOscillator(), g = a.createGain(); o.type = type; o.frequency.value = f;
+                const t = a.currentTime + t0; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + d); o.connect(g).connect(a.destination); o.start(t); o.stop(t + d)
+            }
+            const sfx = { ok: () => { tone(660, .12, 'triangle'); tone(880, .2, 'triangle', .12) }, bad: () => tone(180, .25, 'sawtooth', 0, .1), pop: i => tone(480 + i * 50, .1, 'sine', 0, .15) };
+
+            /* Giọng đọc tiếng Anh */
+            let voice = null;
+            function pickVoice() { const v = speechSynthesis.getVoices(); voice = v.find(x => /en[-_]US/i.test(x.lang) && /female|samantha|google|zira|aria|jenny/i.test(x.name)) || v.find(x => /^en/i.test(x.lang)) || null }
+            if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice }
+            function say(text, rate = .85) {
+                if (!('speechSynthesis' in window)) return Promise.resolve();
+                return new Promise(res => {
+                    speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = 'en-US'; if (voice) u.voice = voice; u.rate = rate; u.pitch = 1.1;
+                    u.onend = res; u.onerror = res; setTimeout(res, 4500); speechSynthesis.speak(u)
+                });
+            }
+
+            /* Phần tử */
+            const fl = $('#fl'), frt = $('#frt'), big = $('#big');
+            const ids = ['sa', 'ss', 'sb'], stars = [];
+            ROUNDS.forEach(() => { const s = document.createElement('span'); s.className = 'star'; s.textContent = '⭐'; $('#stars').appendChild(s); stars.push(s) });
+
+            /* Trạng thái */
+            let state = 'idle', round = 0, a = 0, b = 0, sign = '', slot = [null, null, null], cnt = { L: 0, R: 0 }, mistakes = 0, cur = 'write', sayFails = 0, listening = false, sentence = '', toastT;
+            function toast(t) { const e = $('#toast'); e.textContent = t; e.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => e.classList.remove('show'), 1600) }
+            function setInstr(k, sp = true) { cur = k; $('#instr b').textContent = INSTR[k][0]; $('#instr small').textContent = INSTR[k][1]; if (sp) say(INSTR[k][0]) }
+            $('#spk').onclick = () => { audio(); say(INSTR[cur][0]) };
+            function confetti() {
+                for (let i = 0; i < 26; i++) {
+                    const s = document.createElement('span'); s.className = 'conf'; s.textContent = ['⭐', '🎉', '✨', '🍌', '🍎'][i % 5];
+                    s.style.left = (40 + Math.random() * 920) + 'px'; s.style.animationDelay = Math.random() * .4 + 's'; s.style.fontSize = (20 + Math.random() * 18) + 'px'; stage.appendChild(s); setTimeout(() => s.remove(), 2400)
+                }
+            }
+            const shake = el => el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-10px)' }, { transform: 'translateX(10px)' }, { transform: 'translateX(0)' }], { duration: 350 });
+
+            /* Bàn phím ảo */
+            const keys = $('#keys');
+            for (let i = 0; i <= 10; i++) { const k = document.createElement('button'); k.className = 'k'; k.textContent = i; k.onclick = () => pressNum(i); keys.appendChild(k) }
+            ['>', '<', '='].forEach(c => { const k = document.createElement('button'); k.className = 'k s'; k.textContent = c; k.onclick = () => pressSign(c); keys.appendChild(k) });
+            ids.forEach((id, i) => $('#' + id).onclick = () => { if (state === 'write') { slot[i] = null; renderSlots() } });
+            function renderSlots() {
+                const nx = slot.findIndex(v => v === null);
+                ids.forEach((id, i) => { const e = $('#' + id); e.textContent = slot[i] === null ? '' : slot[i]; e.classList.toggle('on', slot[i] !== null); e.classList.toggle('nx', i === nx && state === 'write') });
+                $('#done').disabled = slot.includes(null);
+            }
+            function pressNum(v) { if (state !== 'write') return; audio(); const i = slot[0] === null ? 0 : slot[2] === null ? 2 : -1; if (i < 0) return; slot[i] = v; sfx.pop(v); say(W[v], .8); renderSlots() }
+            function pressSign(c) { if (state !== 'write') return; audio(); slot[1] = c; sfx.pop(5); say(REL[c], .8); renderSlots() }
+            $('#done').onclick = check;
+
+            /* Trái cây (chạm để đếm) */
+            function mk(el, emo, n, g) {
+                el.innerHTML = ''; for (let i = 0; i < n; i++) {
+                    const f = document.createElement('button'); f.className = 'f'; f.style.animationDelay = i * .06 + 's';
+                    f.innerHTML = `<i style="font-style:normal">${emo}</i><b></b>`; f.onclick = () => tapFruit(f, g); el.appendChild(f)
+                }
+            }
+            function tapFruit(f, g) { if (state !== 'write' || f.classList.contains('c')) return; audio(); const c = ++cnt[g]; f.querySelector('b').textContent = c; f.classList.add('c'); sfx.pop(c); say(W[c], .8) }
+            async function autoCount() {
+                for (const el of [fl, frt]) {
+                    const fs = [...el.children]; fs.forEach(f => f.classList.remove('c', 'hl'));
+                    for (let i = 0; i < fs.length; i++) { const f = fs[i]; f.querySelector('b').textContent = i + 1; f.classList.add('c', 'hl'); sfx.pop(i + 1); await say(W[i + 1], .8); await wait(80); f.classList.remove('hl') }
+                    await wait(250)
+                }
+            }
+
+            /* Vòng chơi */
+            function startRound() {
+                [a, b] = ROUNDS[round]; sign = a > b ? '>' : a < b ? '<' : '='; slot = [null, null, null]; cnt = { L: 0, R: 0 }; state = 'write';
+                mk(fl, FL, a, 'L'); mk(frt, FR, b, 'R');
+                ids.forEach(id => $('#' + id).classList.remove('good'));
+                big.textContent = '?'; big.classList.remove('on');
+                $('#done').hidden = false; $('#sent').hidden = true; keys.hidden = false; $('#sayBox').hidden = true;
+                renderSlots(); setInstr('write'); toast('Which plate has more?');
+            }
+            async function check() {
+                if (state !== 'write' || slot.includes(null)) return; state = 'wait'; audio();
+                const [A, S, B] = slot, numsOk = A === a && B === b;
+                if (numsOk && S === sign) return win();
+                mistakes++; sfx.bad(); shake($('#eq')); toast(numsOk ? 'Look again!' : 'Count again!');
+                await say("Let's count again!"); await autoCount();
+                if (!numsOk) { if (A !== a) slot[0] = null; if (B !== b) slot[2] = null }
+                slot[1] = null; state = 'write'; renderSlots();
+            }
+            async function win() {
+                ids.forEach(id => $('#' + id).classList.add('good')); $('#done').hidden = true; sfx.ok();
+                big.textContent = sign; big.classList.add('on');
+                if (a === b) { toast('Equal!'); say('Equal!') }
+                else { toast('Yes!'); say('Yes!'); (a > b ? fl : frt).querySelectorAll('.f').forEach(f => f.classList.add('win')) }
+                $('#monkey').classList.add('hop'); $('#rabbit').classList.add('hop');
+                await wait(1400);
+                $('#monkey').classList.remove('hop'); $('#rabbit').classList.remove('hop');
+                goSay();
+            }
+
+            /* Say */
+            function goSay() {
+                state = 'say'; sayFails = 0; listening = false; setInstr('say');
+                sentence = `${cap(W[a])} is ${REL[sign]} ${W[b]}.`;
+                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                $('#sent').textContent = sentence; $('#sent').hidden = false; keys.hidden = true; $('#sayBox').hidden = false;
+                $('#micmsg').textContent = SR ? 'Tap 🎤 and read the sentence' : 'Read the sentence out loud, then tap 🎤';
+                $('#listen').onclick = () => { audio(); say(sentence, .8) };
+                $('#mic').onclick = startMic;
+            }
+            function startMic() {
+                if (state !== 'say' || listening) return;
+                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SR) return sayDone();                         // không có nhận diện giọng nói: tin HS đã đọc
+                const btn = $('#mic'), msg = $('#micmsg'); let done = false, r;
+                const end = ok => {
+                    if (done) return; done = true; listening = false; btn.classList.remove('live');
+                    if (ok === true || ok === null) return sayDone();
+                    if (++sayFails >= 2) return sayDone();             // sai 2 lần thì cho qua để HS không nản
+                    msg.textContent = 'Try again!'; say('Try again!');
+                };
+                try {
+                    r = new SR(); r.lang = 'en-US'; r.maxAlternatives = 5; r.interimResults = false;
+                    listening = true; btn.classList.add('live'); msg.textContent = 'Listening…';
+                    r.onresult = e => end([...e.results[0]].some(x => KEY[sign].test(x.transcript.toLowerCase())));
+                    r.onerror = e => end(['no-speech', 'aborted'].includes(e.error) ? false : null);
+                    r.onend = () => end(false);
+                    r.start();
+                } catch (err) { end(null) }
+            }
+            async function sayDone() {
+                if (state === 'wait') return; state = 'wait';
+                sfx.ok(); confetti(); stars[round].classList.add('on'); toast('Great job!');
+                await say('Great job!'); await wait(900);
+                round++; if (round >= ROUNDS.length) endGame(); else startRound();
+            }
+
+            /* Bắt đầu / kết thúc */
+            function endGame() {
+                state = 'idle';
+                $('#ovEmoji').textContent = '⭐'.repeat(ROUNDS.length);
+                $('#ovSub').textContent = mistakes === 0 ? 'Perfect! Không sai lần nào!' : 'Bạn đã hoàn thành ' + ROUNDS.length + ' câu!';
+                $('#overlay').hidden = false; confetti(); say('Great job!');
+                try { parent.postMessage({ type: 'game-complete', game: 'write-and-say-compare', mistakes }, '*') } catch (e) { }
+            }
+            function begin() { $('#overlay').hidden = true; round = 0; mistakes = 0; stars.forEach(s => s.classList.remove('on')); startRound() }
+            $('#go').onclick = () => { audio(); begin() };
+            begin();
+        })();
+    </script>
+</body>
+
+</html>
