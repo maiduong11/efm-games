@@ -435,22 +435,9 @@
             font-size: 46px
         }
 
-        #sayBox {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px
-        }
-
         .row {
             display: flex;
             gap: 14px
-        }
-
-        #micmsg {
-            font-size: 16px;
-            opacity: .7;
-            min-height: 20px
         }
 
         .btn {
@@ -480,12 +467,6 @@
         .btn.ghost {
             background: #fff;
             border: 3px solid #E9CFA9
-        }
-
-        .btn.live {
-            background: var(--ok);
-            color: #fff;
-            animation: pulse .8s infinite
         }
 
         #done {
@@ -540,12 +521,6 @@
             to {
                 transform: none;
                 opacity: 1
-            }
-        }
-
-        @keyframes pulse {
-            50% {
-                scale: 1.1
             }
         }
 
@@ -728,8 +703,7 @@
                     <div id="keys"></div>
                     <div id="sayBox" hidden>
                         <div class="row"><button class="btn ghost" id="listen">&#128266; Listen</button><button
-                                class="btn primary" id="mic">&#127908; Say it!</button></div>
-                        <div id="micmsg"></div>
+                                class="btn primary" id="next">Next &#10140;</button></div>
                     </div>
                 </div>
             </div>
@@ -751,7 +725,6 @@
             /* ============================================== */
             const W = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
             const REL = { '>': 'greater than', '<': 'less than', '=': 'equal to' };
-            const KEY = { '>': /great|grader/, '<': /less/, '=': /equal/ };
             const INSTR = { write: ['Write the numbers and the sign!', 'Chọn số và dấu so sánh'], say: ['Say it!', 'Đọc to câu so sánh'] };
             const $ = s => document.querySelector(s), wait = ms => new Promise(r => setTimeout(r, ms)), cap = s => s[0].toUpperCase() + s.slice(1);
 
@@ -787,7 +760,7 @@
             ROUNDS.forEach(() => { const s = document.createElement('span'); s.className = 'star'; s.textContent = '⭐'; $('#stars').appendChild(s); stars.push(s) });
 
             /* Trạng thái */
-            let state = 'idle', round = 0, a = 0, b = 0, sign = '', slot = [null, null, null], cnt = { L: 0, R: 0 }, mistakes = 0, cur = 'write', sayFails = 0, listening = false, sentence = '', toastT;
+            let state = 'idle', round = 0, a = 0, b = 0, sign = '', slot = [null, null, null], cnt = { L: 0, R: 0 }, mistakes = 0, cur = 'write', sentence = '', toastT;
             function toast(t) { const e = $('#toast'); e.textContent = t; e.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => e.classList.remove('show'), 1600) }
             function setInstr(k, sp = true) { cur = k; $('#instr b').textContent = INSTR[k][0]; $('#instr small').textContent = INSTR[k][1]; if (sp) say(INSTR[k][0]) }
             $('#spk').onclick = () => { audio(); say(INSTR[cur][0]) };
@@ -858,35 +831,13 @@
                 goSay();
             }
 
-            /* Say */
+            /* Say: HS tự đọc câu, có nút Listen để nghe mẫu */
             function goSay() {
-                state = 'say'; sayFails = 0; listening = false; setInstr('say');
+                state = 'say'; setInstr('say');
                 sentence = `${cap(W[a])} is ${REL[sign]} ${W[b]}.`;
-                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
                 $('#sent').textContent = sentence; $('#sent').hidden = false; keys.hidden = true; $('#sayBox').hidden = false;
-                $('#micmsg').textContent = SR ? 'Tap 🎤 and read the sentence' : 'Read the sentence out loud, then tap 🎤';
                 $('#listen').onclick = () => { audio(); say(sentence, .8) };
-                $('#mic').onclick = startMic;
-            }
-            function startMic() {
-                if (state !== 'say' || listening) return;
-                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if (!SR) return sayDone();                         // không có nhận diện giọng nói: tin HS đã đọc
-                const btn = $('#mic'), msg = $('#micmsg'); let done = false, r;
-                const end = ok => {
-                    if (done) return; done = true; listening = false; btn.classList.remove('live');
-                    if (ok === true || ok === null) return sayDone();
-                    if (++sayFails >= 2) return sayDone();             // sai 2 lần thì cho qua để HS không nản
-                    msg.textContent = 'Try again!'; say('Try again!');
-                };
-                try {
-                    r = new SR(); r.lang = 'en-US'; r.maxAlternatives = 5; r.interimResults = false;
-                    listening = true; btn.classList.add('live'); msg.textContent = 'Listening…';
-                    r.onresult = e => end([...e.results[0]].some(x => KEY[sign].test(x.transcript.toLowerCase())));
-                    r.onerror = e => end(['no-speech', 'aborted'].includes(e.error) ? false : null);
-                    r.onend = () => end(false);
-                    r.start();
-                } catch (err) { end(null) }
+                $('#next').onclick = sayDone;
             }
             async function sayDone() {
                 if (state === 'wait') return; state = 'wait';
