@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Circle and say - Basketball</title>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --orange: #D9803A;
+            --orange-d: #B9661F;
+            --brown: #2B1D14;
+            --sand: #F7EFE0;
+            --green: #5E8C3A;
+            --ok: #3FA564;
+            --bad: #D9534F;
+            --line: #F0DDBE;
+            --font: 'Baloo 2', 'Nunito', 'Segoe UI', system-ui, sans-serif
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent
+        }
+
+        [hidden] {
+            display: none !important
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: transparent;
+            font-family: var(--font);
+            color: var(--brown);
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation
+        }
+
+        body {
+            display: grid;
+            place-items: center
+        }
+
+        button {
+            font-family: inherit;
+            color: inherit
+        }
+
+        svg text {
+            font-family: var(--font);
+            font-weight: 800;
+            fill: #2B1D14;
+            text-anchor: middle;
+            dominant-baseline: central
+        }
+
+        #fit {
+            position: relative
+        }
+
+        #stage {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1000px;
+            height: 560px;
+            transform-origin: 0 0;
+            background: var(--sand);
+            border-radius: 28px;
+            overflow: hidden
+        }
+
+        #stage::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 6px solid var(--green);
+            border-radius: 28px;
+            pointer-events: none;
+            z-index: 50
+        }
+
+        #bg {
+            position: absolute;
+            left: 0;
+            top: 0
+        }
+
+        /* HUD */
+        #hud {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1000px;
+            height: 62px;
+            padding: 10px 28px 0;
+            z-index: 28;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center
+        }
+
+        #stars {
+            display: flex;
+            gap: 6px;
+            font-size: 26px
+        }
+
+        .star {
+            filter: grayscale(1);
+            opacity: .4;
+            transition: .3s
+        }
+
+        .star.on {
+            filter: none;
+            opacity: 1;
+            transform: scale(1.15)
+        }
+
+        #instr {
+            background: #fff;
+            border: 3px solid var(--orange);
+            border-radius: 999px;
+            padding: 2px 28px;
+            text-align: center;
+            line-height: 1.05
+        }
+
+        #instr b {
+            display: block;
+            font-size: 24px;
+            font-weight: 800
+        }
+
+        #instr small {
+            font-size: 13px;
+            opacity: .7
+        }
+
+        #spk {
+            justify-self: end;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            border: 3px solid #E9CFA9;
+            background: #FFF7E8;
+            font-size: 22px;
+            cursor: pointer
+        }
+
+        /* Sân bóng */
+        #hb,
+        #net {
+            position: absolute;
+            left: 620px;
+            top: 80px;
+            width: 200px;
+            height: 240px;
+            pointer-events: none
+        }
+
+        #hb {
+            z-index: 3
+        }
+
+        #net {
+            z-index: 7;
+            transform-origin: 65% 47%
+        }
+
+        #net.swish {
+            animation: swish .7s ease-out
+        }
+
+        #ball {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 60px;
+            height: 60px;
+            z-index: 6;
+            cursor: pointer;
+            transition: opacity .2s
+        }
+
+        #ball::after {
+            content: '';
+            position: absolute;
+            inset: -16px
+        }
+
+        #ball svg {
+            width: 100%;
+            height: 100%;
+            display: block
+        }
+
+        #ball.ready {
+            animation: pulse 1s infinite
+        }
+
+        #hint {
+            position: absolute;
+            left: 232px;
+            top: 506px;
+            font-size: 36px;
+            z-index: 7;
+            pointer-events: none;
+            animation: bob 1s ease-in-out infinite
+        }
+
+        #swishTxt {
+            position: absolute;
+            left: 470px;
+            top: 130px;
+            font-size: 46px;
+            font-weight: 800;
+            color: var(--orange);
+            text-shadow: 0 3px 0 #fff;
+            z-index: 12;
+            opacity: 0;
+            pointer-events: none
+        }
+
+        #swishTxt.go {
+            animation: swt 1s ease-out
+        }
+
+        /* Popup */
+        #dim {
+            position: absolute;
+            inset: 0;
+            background: rgba(43, 29, 20, .4);
+            z-index: 25;
+            opacity: 0;
+            transition: opacity .3s;
+            pointer-events: none
+        }
+
+        #dim.on {
+            opacity: 1
+        }
+
+        #pop {
+            position: absolute;
+            left: 190px;
+            top: 196px;
+            width: 620px;
+            height: 332px;
+            z-index: 30;
+            background: #FFFCF5;
+            border: 6px solid var(--orange);
+            border-radius: 34px;
+            box-shadow: 0 12px 0 rgba(0, 0, 0, .18);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 22px;
+            padding: 30px 14px 16px
+        }
+
+        .tag {
+            position: absolute;
+            top: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--orange);
+            color: #fff;
+            font-weight: 800;
+            font-size: 22px;
+            padding: 2px 26px;
+            border-radius: 999px;
+            border: 4px solid #fff;
+            white-space: nowrap
+        }
+
+        .srow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px
+        }
+
+        .nb {
+            width: 88px;
+            height: 88px;
+            animation: breathe 2.4s ease-in-out infinite;
+            filter: drop-shadow(0 5px 0 rgba(0, 0, 0, .15))
+        }
+
+        .nb:last-child {
+            animation-delay: -1.2s
+        }
+
+        .nb svg,
+        .ch svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+            overflow: visible
+        }
+
+        .w {
+            font-size: 42px;
+            font-weight: 800;
+            display: inline-block
+        }
+
+        .slot {
+            position: relative;
+            width: 180px;
+            height: 66px;
+            border: 4px dashed #E2CFAE;
+            border-radius: 18px;
+            display: grid;
+            place-items: center;
+            background: #FFFCF5
+        }
+
+        .slot.filled {
+            border-style: solid;
+            border-color: var(--line)
+        }
+
+        .slot.good {
+            border-color: var(--ok);
+            background: #E8F7EC
+        }
+
+        .slot.bad .sw {
+            color: var(--bad)
+        }
+
+        .sw {
+            font-size: 40px;
+            font-weight: 800;
+            line-height: 1
+        }
+
+        .ring {
+            position: absolute;
+            left: -21px;
+            top: -13px;
+            width: 222px;
+            height: 92px;
+            pointer-events: none;
+            overflow: visible
+        }
+
+        .ring path {
+            fill: none;
+            stroke: #C0392B;
+            stroke-width: 5;
+            stroke-linecap: round;
+            stroke-dasharray: 1;
+            stroke-dashoffset: 1;
+            animation: draw .55s ease-out forwards
+        }
+
+        .nb.hop {
+            animation: hopn .6s ease 2
+        }
+
+        .hl {
+            animation: hlp .55s
+        }
+
+        .w.hl,
+        .slot.hl .sw {
+            color: var(--orange)
+        }
+
+        .crow {
+            display: flex;
+            gap: 80px;
+            min-height: 116px;
+            align-items: center;
+            justify-content: center
+        }
+
+        .ch {
+            width: 116px;
+            height: 116px;
+            border: 0;
+            background: none;
+            cursor: pointer;
+            animation: hopb 1.2s ease-in-out infinite;
+            filter: drop-shadow(0 6px 0 rgba(0, 0, 0, .15))
+        }
+
+        .ch:nth-child(2) {
+            animation-delay: .6s
+        }
+
+        .ch.still {
+            animation: none
+        }
+
+        .btn {
+            font: 800 26px var(--font);
+            border-radius: 999px;
+            padding: 8px 28px;
+            border: 0;
+            cursor: pointer;
+            box-shadow: 0 5px 0 rgba(0, 0, 0, .18)
+        }
+
+        .btn:active {
+            transform: translateY(3px)
+        }
+
+        .btn.primary {
+            background: var(--orange);
+            color: #fff
+        }
+
+        .btn.ghost {
+            background: #fff;
+            border: 3px solid #E9CFA9
+        }
+
+        #overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 40;
+            background: rgba(253, 249, 240, .95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px
+        }
+
+        #ovTitle {
+            font-size: 54px;
+            font-weight: 800;
+            line-height: 1
+        }
+
+        #ovSub {
+            font-size: 22px;
+            opacity: .7
+        }
+
+        #ovEmoji {
+            font-size: 80px;
+            margin: 8px 0
+        }
+
+        .conf {
+            position: absolute;
+            top: -40px;
+            z-index: 32;
+            pointer-events: none;
+            animation: confall 1.8s ease-in forwards
+        }
+
+        @keyframes pulse {
+            50% {
+                scale: 1.1
+            }
+        }
+
+        @keyframes bob {
+            50% {
+                transform: translateY(-8px)
+            }
+        }
+
+        @keyframes breathe {
+            50% {
+                transform: scale(1.07)
+            }
+        }
+
+        @keyframes hopb {
+
+            0%,
+            100% {
+                transform: translateY(0) scale(1.06, .94)
+            }
+
+            45% {
+                transform: translateY(-18px) scale(1)
+            }
+        }
+
+        @keyframes hopn {
+            40% {
+                transform: translateY(-26px)
+            }
+        }
+
+        @keyframes hlp {
+            40% {
+                transform: scale(1.35) rotate(-5deg)
+            }
+        }
+
+        @keyframes draw {
+            to {
+                stroke-dashoffset: 0
+            }
+        }
+
+        @keyframes swish {
+            30% {
+                transform: scaleY(1.25) scaleX(.92)
+            }
+
+            60% {
+                transform: scaleY(.95)
+            }
+        }
+
+        @keyframes swt {
+            0% {
+                opacity: 0;
+                transform: scale(.4)
+            }
+
+            25% {
+                opacity: 1;
+                transform: scale(1.2)
+            }
+
+            70% {
+                opacity: 1
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-20px)
+            }
+        }
+
+        @keyframes confall {
+            to {
+                transform: translateY(640px) rotate(360deg)
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="fit">
+        <div id="stage">
+
+            <svg id="bg" width="1000" height="560" viewBox="0 0 1000 560">
+                <defs>
+                    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stop-color="#FFE9B8" />
+                        <stop offset="1" stop-color="#FFD58A" />
+                    </linearGradient>
+                    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stop-color="#E9B167" />
+                        <stop offset="1" stop-color="#D9954A" />
+                    </linearGradient>
+                </defs>
+                <rect width="1000" height="445" fill="url(#wall)" />
+                <line x1="0" y1="72" x2="600" y2="72" stroke="#8A6A3A" stroke-width="2" />
+                <g>
+                    <polygon points="52,72 88,72 70,108" fill="#E8543A" />
+                    <polygon points="152,72 188,72 170,108" fill="#FFD04D" />
+                    <polygon points="252,72 288,72 270,108" fill="#3FA564" />
+                    <polygon points="352,72 388,72 370,108" fill="#4FA3E0" />
+                    <polygon points="452,72 488,72 470,108" fill="#C45BD4" />
+                    <polygon points="552,72 588,72 570,108" fill="#E8543A" />
+                </g>
+                <rect y="440" width="1000" height="120" fill="url(#floor)" />
+                <rect y="436" width="1000" height="8" fill="#B87A36" />
+                <g stroke="#B87A36" stroke-width="2" opacity=".35">
+                    <line x1="0" y1="472" x2="1000" y2="472" />
+                    <line x1="0" y1="508" x2="1000" y2="508" />
+                    <line x1="0" y1="542" x2="1000" y2="542" />
+                </g>
+                <path d="M240 560L300 444H700L760 560" fill="none" stroke="#fff" stroke-width="4" opacity=".7" />
+                <rect x="828" y="80" width="14" height="364" fill="#9AA0AA" />
+                <rect x="808" y="96" width="22" height="10" fill="#9AA0AA" />
+                <ellipse cx="250" cy="505" rx="32" ry="8" fill="rgba(0,0,0,.18)" />
+            </svg>
+
+            <!-- Rổ: backboard + vành sau -->
+            <svg id="hb" viewBox="0 0 200 240">
+                <rect x="70" y="0" width="120" height="88" rx="10" fill="#fff" stroke="#2B1D14" stroke-width="4" />
+                <rect x="106" y="38" width="48" height="36" fill="none" stroke="#E8543A" stroke-width="4" />
+                <rect x="118" y="88" width="24" height="14" fill="#8A8F99" />
+                <ellipse cx="130" cy="112" rx="46" ry="11" fill="none" stroke="#E8543A" stroke-width="6" />
+            </svg>
+            <!-- Rổ: lưới + vành trước -->
+            <svg id="net" viewBox="0 0 200 240">
+                <g stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round">
+                    <path d="M84 114L108 172M107 118L119 173M130 120L130 174M153 118L141 173M176 114L152 172" />
+                    <path d="M92.7 135Q130 145 167.3 135M101 155Q130 164 159 155M108 172Q130 178 152 172" />
+                </g>
+                <path d="M84 112A46 11 0 0 0 176 112" fill="none" stroke="#E8543A" stroke-width="6"
+                    stroke-linecap="round" />
+            </svg>
+
+            <div id="hud">
+                <div id="stars"></div>
+                <div id="instr"><b></b><small></small></div>
+                <button id="spk" aria-label="Listen">&#128266;</button>
+            </div>
+
+            <div id="ball"></div>
+            <div id="hint">&#128070;</div>
+            <div id="swishTxt">Swish!</div>
+
+            <div id="dim"></div>
+            <div id="pop" hidden></div>
+
+            <div id="overlay" hidden>
+                <div id="ovTitle">Great job!</div>
+                <div id="ovSub"></div>
+                <div id="ovEmoji"></div>
+                <button class="btn primary" id="go" style="font-size:34px;padding:8px 48px">Play again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            /* ============ CẤU HÌNH (sửa ở đây) ============ */
+            const ROUNDS = [[8, 9], [8, 1], [9, 3], [2, 5], [6, 7]];   // [số bên trái, số bên phải] mỗi câu (0-10, hai số phải khác nhau)
+            /* ============================================== */
+            const W = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+            const INSTR = { shoot: ['Tap the ball to shoot!', 'Chạm vào quả bóng để ném'], circle: ['Circle the right word!', 'Chạm quả bóng có từ đúng'], say: ['Say it!', 'Đọc to câu so sánh'] };
+            const $ = s => document.querySelector(s), wait = ms => new Promise(r => setTimeout(r, ms));
+            const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]] } return a };
+
+            /* Scale vừa khung */
+            const fit = $('#fit'), stage = $('#stage'); let S = 1;
+            function resize() { S = Math.min(innerWidth / 1000, innerHeight / 560); fit.style.width = 1000 * S + 'px'; fit.style.height = 560 * S + 'px'; stage.style.transform = `scale(${S})` }
+            addEventListener('resize', resize); resize();
+            function rel(el) { const r = el.getBoundingClientRect(), o = stage.getBoundingClientRect(); return { x: (r.left - o.left) / S, y: (r.top - o.top) / S, w: r.width / S, h: r.height / S } }
+
+            /* Âm thanh */
+            let ac;
+            function audio() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)() } catch (e) { } } if (ac && ac.state === 'suspended') ac.resume(); return ac }
+            function tone(f, d = .15, type = 'sine', t0 = 0, vol = .18) {
+                const a = audio(); if (!a) return; const o = a.createOscillator(), g = a.createGain(); o.type = type; o.frequency.value = f;
+                const t = a.currentTime + t0; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + d); o.connect(g).connect(a.destination); o.start(t); o.stop(t + d)
+            }
+            const sfx = {
+                ok: () => { tone(660, .12, 'triangle'); tone(880, .2, 'triangle', .12) }, bad: () => tone(180, .25, 'sawtooth', 0, .1), pop: i => tone(480 + i * 50, .1, 'sine', 0, .15),
+                swish: () => { tone(900, .18, 'triangle'); tone(1300, .14, 'triangle', .07) }, throw: () => tone(300, .25, 'sine', 0, .12)
+            };
+
+            /* Giọng đọc tiếng Anh */
+            let voice = null;
+            function pickVoice() { const v = speechSynthesis.getVoices(); voice = v.find(x => /en[-_]US/i.test(x.lang) && /female|samantha|google|zira|aria|jenny/i.test(x.name)) || v.find(x => /^en/i.test(x.lang)) || null }
+            if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice }
+            function say(text, rate = .85) {
+                if (!('speechSynthesis' in window)) return Promise.resolve();
+                return new Promise(res => {
+                    speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = 'en-US'; if (voice) u.voice = voice; u.rate = rate; u.pitch = 1.1;
+                    u.onend = res; u.onerror = res; setTimeout(res, 4500); speechSynthesis.speak(u)
+                });
+            }
+
+            /* Bóng rổ SVG (label = số hoặc từ; null = bóng trơn) */
+            function bball(l) {
+                let pill = '', txt = '';
+                if (l !== null) {
+                    const wd = String(l).length > 2;
+                    pill = wd ? '<rect x="5" y="33" width="90" height="34" rx="17" fill="#fff"/>' : '<rect x="18" y="33" width="64" height="34" rx="17" fill="#fff"/>';
+                    txt = `<text x="50" y="51" font-size="${wd ? 19 : 30}">${l}</text>`
+                }
+                return `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#F28C28" stroke="#2B1D14" stroke-width="4"/><path d="M50 4V96M4 50H96M16 18Q50 50 16 82M84 18Q50 50 84 82" fill="none" stroke="#2B1D14" stroke-width="3"/>${pill}${txt}</svg>`;
+            }
+
+            /* Phần tử */
+            const ball = $('#ball'), hint = $('#hint'), net = $('#net'), pop = $('#pop'), dim = $('#dim');
+            ball.innerHTML = bball(null);
+            const stars = [];
+            ROUNDS.forEach(() => { const s = document.createElement('span'); s.className = 'star'; s.textContent = '⭐'; $('#stars').appendChild(s); stars.push(s) });
+
+            /* Trạng thái */
+            let state = 'idle', round = 0, a = 0, b = 0, word = '', mistakes = 0, cur = 'shoot', busy = false;
+            function setInstr(k, sp = true) { cur = k; $('#instr b').textContent = INSTR[k][0]; $('#instr small').textContent = INSTR[k][1]; if (sp) say(INSTR[k][0]) }
+            $('#spk').onclick = () => { audio(); say(INSTR[cur][0]) };
+            function confetti() {
+                for (let i = 0; i < 26; i++) {
+                    const s = document.createElement('span'); s.className = 'conf'; s.textContent = ['⭐', '🎉', '✨', '🏀'][i % 4];
+                    s.style.left = (40 + Math.random() * 920) + 'px'; s.style.animationDelay = Math.random() * .4 + 's'; s.style.fontSize = (20 + Math.random() * 18) + 'px'; stage.appendChild(s); setTimeout(() => s.remove(), 2400)
+                }
+            }
+            const shake = el => el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-12px)' }, { transform: 'translateX(12px)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(0)' }], { duration: 400 });
+
+            /* Bóng bay vào rổ */
+            function setBall(x, y, rot = 0, sc = 1) { ball.style.transform = `translate(${x - 30}px,${y - 30}px) rotate(${rot}deg) scale(${sc})` }
+            function shoot() {
+                return new Promise(res => {
+                    const P = [250, 470], C = [470, 40], T = [750, 192], dur = 1100, t0 = performance.now();
+                    (function f(now) {
+                        const t = Math.min(1, (now - t0) / dur), u = 1 - t;
+                        setBall(u * u * P[0] + 2 * u * t * C[0] + t * t * T[0], u * u * P[1] + 2 * u * t * C[1] + t * t * T[1], t * 600, 1 - .28 * t);
+                        if (t < 1) requestAnimationFrame(f); else res()
+                    })(t0);
+                })
+            }
+            function drop() {
+                return new Promise(res => {
+                    const t0 = performance.now(), dur = 300;
+                    (function f(now) { const t = Math.min(1, (now - t0) / dur); setBall(750, 192 + 68 * t, 600 + 60 * t, .72); if (t < 1) requestAnimationFrame(f); else res() })(t0);
+                })
+            }
+            ball.onclick = () => { if (state === 'shoot') throwBall() };
+            async function throwBall() {
+                state = 'shooting'; audio(); ball.classList.remove('ready'); hint.hidden = true; sfx.throw();
+                await shoot();
+                net.classList.remove('swish'); void net.offsetWidth; net.classList.add('swish'); sfx.swish();
+                const st = $('#swishTxt'); st.classList.remove('go'); void st.offsetWidth; st.classList.add('go');
+                await drop(); ball.style.opacity = 0;
+                await wait(300); openPop();
+            }
+
+            /* Popup */
+            const HOOP = '560px -4px';
+            const KF = [
+                [{ transform: 'scale(.02)', opacity: 0, easing: 'ease-out' }, { transform: 'scale(1.12)', opacity: 1, offset: .55, easing: 'ease-in-out' }, { transform: 'scale(.95)', offset: .75, easing: 'ease-in-out' }, { transform: 'scale(1.03)', offset: .9, easing: 'ease-in-out' }, { transform: 'scale(1)' }],
+                [{ transform: 'translateX(-900px) rotate(-540deg)', easing: 'ease-out' }, { transform: 'translateX(30px) rotate(8deg)', offset: .7, easing: 'ease-in-out' }, { transform: 'translateX(-10px) rotate(-3deg)', offset: .86, easing: 'ease-in-out' }, { transform: 'none' }],
+                [{ transform: 'translateY(-560px)', easing: 'ease-in' }, { transform: 'translateY(0)', offset: .5, easing: 'ease-out' }, { transform: 'translateY(-70px)', offset: .68, easing: 'ease-in' }, { transform: 'translateY(0)', offset: .82, easing: 'ease-out' }, { transform: 'translateY(-18px)', offset: .91, easing: 'ease-in' }, { transform: 'none' }]
+            ];
+            const DUR = [750, 950, 1100];
+            function buildPop() {
+                word = a > b ? 'greater' : 'less';
+                pop.innerHTML = `<div class="tag">Circle and say</div>
+    <div class="srow" id="sent">
+      <div class="nb">${bball(a)}</div><span class="w">is</span>
+      <div class="slot" id="slot"><span class="sw"></span></div>
+      <span class="w">than</span><div class="nb">${bball(b)}</div>
+    </div>
+    <div class="crow" id="crow">${shuffle(['greater', 'less']).map(w => `<button class="ch" data-w="${w}">${bball(w)}</button>`).join('')}</div>`;
+                pop.querySelectorAll('.ch').forEach(c => c.onclick = () => choose(c));
+            }
+            async function openPop() {
+                buildPop(); dim.classList.add('on'); pop.hidden = false;
+                const v = round % 3; pop.style.transformOrigin = v === 0 ? HOOP : '50% 50%';
+                await pop.animate(KF[v], { duration: DUR[v] }).finished;
+                state = 'circle'; setInstr('circle');
+            }
+            async function closePop() {
+                pop.style.transformOrigin = HOOP; dim.classList.remove('on');
+                const an = pop.animate([{ transform: 'none', opacity: 1 }, { transform: 'scale(.02)', opacity: 0 }], { duration: 380, easing: 'ease-in', fill: 'forwards' });
+                await an.finished; pop.hidden = true; an.cancel();
+            }
+
+            /* Khoanh từ */
+            async function choose(btn) {
+                if (state !== 'circle') return; const w = btn.dataset.w; state = 'wait'; audio(); say(w, .8); btn.classList.add('still');
+                const slot = $('#slot'), sw = slot.querySelector('.sw'), A = rel(btn), Sl = rel(slot);
+                const dx = Sl.x + Sl.w / 2 - (A.x + A.w / 2), dy = Sl.y + Sl.h / 2 - (A.y + A.h / 2);
+                const fly = btn.animate([{ transform: 'none' }, { transform: `translate(${dx}px,${dy}px) scale(.45)` }], { duration: 480, easing: 'cubic-bezier(.5,0,.9,.6)', fill: 'forwards' });
+                await fly.finished; sfx.pop(3); sw.textContent = w; slot.classList.add('filled');
+                if (w === word) {
+                    slot.classList.add('good'); btn.style.visibility = 'hidden'; fly.cancel();
+                    slot.insertAdjacentHTML('beforeend', '<svg class="ring" viewBox="0 0 222 92" preserveAspectRatio="none"><path pathLength="1" d="M24 54C14 26 70 8 118 10C172 12 210 30 202 54C194 78 140 84 100 82C58 80 22 76 14 50"/></svg>');
+                    sfx.ok(); confetti(); stars[round].classList.add('on');
+                    pop.querySelectorAll('.nb').forEach(n => n.classList.add('hop'));
+                    const other = [...$('#crow').children].find(x => x !== btn);
+                    if (other) other.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.3)' }], { duration: 350, fill: 'forwards' });
+                    await wait(1000);
+                    state = 'read'; setInstr('say', false);
+                    $('#crow').innerHTML = '<button class="btn ghost" id="listen">&#128266; Listen</button><button class="btn primary" id="next">Next &#10140;</button>';
+                    $('#listen').onclick = () => { audio(); readSentence() };
+                    $('#next').onclick = next;
+                    await say('Yes!'); await readSentence();
+                } else {
+                    mistakes++; slot.classList.add('bad'); sfx.bad(); shake(pop); say('Oops! Try again!');
+                    await wait(700);
+                    slot.classList.remove('filled', 'bad'); sw.textContent = '';
+                    const done = new Promise(r => { fly.onfinish = r }); fly.reverse(); await done; fly.cancel();
+                    btn.classList.remove('still'); state = 'circle';
+                }
+            }
+
+            /* Karaoke đọc câu */
+            async function readSentence() {
+                if (busy) return; busy = true;
+                const parts = [...$('#sent').children], txt = [W[a], 'is', word, 'than', W[b]];
+                for (let i = 0; i < parts.length; i++) { parts[i].classList.add('hl'); await say(txt[i], .8); await wait(60); parts[i].classList.remove('hl') }
+                busy = false;
+            }
+            async function next() {
+                if (state !== 'read' || busy) return; state = 'wait'; sfx.ok();
+                await closePop();
+                round++; if (round >= ROUNDS.length) endGame(); else startRound();
+            }
+
+            /* Vòng chơi */
+            function startRound() {
+                [a, b] = ROUNDS[round]; state = 'shoot';
+                ball.style.opacity = 1; setBall(250, 470, 0, 1); ball.classList.add('ready'); hint.hidden = false;
+                ball.animate([{ opacity: 0, scale: '.3' }, { opacity: 1, scale: '1.15', offset: .7 }, { opacity: 1, scale: '1' }], { duration: 450 });
+                setInstr('shoot');
+            }
+            function endGame() {
+                state = 'idle';
+                $('#ovEmoji').textContent = '⭐'.repeat(ROUNDS.length);
+                $('#ovSub').textContent = mistakes === 0 ? 'Perfect! Không sai lần nào!' : 'Bạn đã hoàn thành ' + ROUNDS.length + ' câu!';
+                $('#overlay').hidden = false; confetti(); say('Great job!');
+                try { parent.postMessage({ type: 'game-complete', game: 'basketball-circle-and-say', mistakes }, '*') } catch (e) { }
+            }
+            function begin() { $('#overlay').hidden = true; round = 0; mistakes = 0; busy = false; stars.forEach(s => s.classList.remove('on')); startRound() }
+            $('#go').onclick = () => { audio(); begin() };
+            begin();
+        })();
+    </script>
+</body>
+
+</html>
